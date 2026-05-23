@@ -1,0 +1,321 @@
+@import url("/vendor/helpers.pbb.ph/dist/helpers.ui.bundle.min.css");
+
+:root {
+  color-scheme: dark;
+}
+
+body.relay-dashboard {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(82, 113, 171, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(53, 173, 154, 0.14), transparent 24%),
+    linear-gradient(180deg, #09111d 0%, #0d1523 48%, #10192b 100%);
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+}
+
+a {
+  color: inherit;
+}
+
+.relay-dashboard-shell {
+  width: min(100vw - 24px, 1800px);
+  height: calc(100vh - 24px);
+  margin: 12px auto;
+  display: grid;
+  gap: 18px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.relay-hero {
+  background:
+    linear-gradient(135deg, rgba(16, 28, 49, 0.96), rgba(13, 21, 35, 0.94)),
+    var(--ui-bg-soft);
+}
+
+.relay-console-bar {
+  padding-block: 14px;
+}
+
+.relay-title {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 0.95;
+}
+
+.relay-hero-copy,
+.relay-section-note,
+.relay-lead,
+.relay-metric-note {
+  color: var(--ui-muted);
+}
+
+.relay-lead,
+.relay-section-note,
+.relay-metric-note {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.relay-hero-actions,
+.relay-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+.relay-operator-nav-host {
+  min-height: 0;
+}
+
+.relay-operator-nav {
+  background: rgba(10, 18, 31, 0.94);
+  border-color: rgba(102, 135, 191, 0.24);
+}
+
+.relay-operator-nav .ui-navbar-brand {
+  color: #f3f7ff;
+}
+
+.relay-operator-nav .ui-navbar-item {
+  background: rgba(18, 33, 58, 0.86);
+}
+
+.relay-operator-nav .ui-navbar-item.is-active {
+  border-color: rgba(83, 199, 179, 0.48);
+  background: rgba(19, 50, 63, 0.9);
+}
+
+.relay-operator-nav .ui-navbar-action {
+  white-space: nowrap;
+}
+
+.relay-health {
+  align-self: flex-start;
+}
+
+.relay-health-healthy {
+  border-color: rgba(72, 181, 104, 0.5);
+  color: #9effbb;
+}
+
+.relay-health-degraded {
+  border-color: rgba(241, 169, 77, 0.5);
+  color: #ffd18a;
+}
+
+.relay-health-unhealthy {
+  border-color: rgba(239, 107, 92, 0.5);
+  color: #ffb6ac;
+}
+
+.relay-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.relay-metric-card {
+  min-height: 200px;
+}
+
+.relay-metric-title {
+  font-size: 1.15rem;
+}
+
+.relay-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.95fr);
+  gap: 18px;
+  min-height: 0;
+}
+
+.relay-dashboard-main,
+.relay-dashboard-side {
+  display: grid;
+  gap: 18px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.relay-grid-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.relay-grid-cell strong {
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.relay-grid-cell small {
+  color: var(--ui-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.relay-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: var(--ui-radius-pill);
+  border: 1px solid var(--ui-border-strong);
+  font: 600 12px/1 var(--ui-font);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.relay-status-badge.is-ok {
+  border-color: rgba(72, 181, 104, 0.45);
+  color: #9effbb;
+  background: rgba(52, 124, 72, 0.18);
+}
+
+.relay-status-badge.is-warn {
+  border-color: rgba(241, 169, 77, 0.45);
+  color: #ffd18a;
+  background: rgba(123, 86, 35, 0.22);
+}
+
+.relay-status-badge.is-danger {
+  border-color: rgba(239, 107, 92, 0.45);
+  color: #ffb6ac;
+  background: rgba(121, 46, 36, 0.22);
+}
+
+.relay-status-badge.is-info {
+  border-color: rgba(98, 145, 219, 0.45);
+  color: #b8d3ff;
+  background: rgba(31, 57, 99, 0.22);
+}
+
+.relay-dashboard .ui-grid.is-chrome-less {
+  background: transparent;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.relay-dashboard .ui-grid-table thead th {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.relay-dashboard .ui-grid-table-wrap {
+  min-height: 0;
+  overflow: auto;
+}
+
+.relay-metric-skeleton {
+  min-height: 52px;
+}
+
+.relay-grid-skeleton {
+  min-height: 280px;
+}
+
+.relay-dashboard .ui-grid-cell,
+.relay-dashboard .ui-grid-col {
+  font-size: 13px;
+}
+
+.relay-public-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.relay-public-link-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: rgba(17, 31, 54, 0.42);
+}
+
+.relay-public-link-card strong {
+  font-size: 1rem;
+  color: var(--ui-text);
+}
+
+.relay-public-link-card code {
+  display: inline-block;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: var(--ui-radius-pill);
+  background: rgba(11, 19, 34, 0.9);
+  border: 1px solid var(--ui-border);
+  color: #b8d3ff;
+  font: 600 12px/1.4 var(--ui-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+}
+
+.relay-public-facts {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.relay-public-fact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.relay-public-fact:last-child {
+  border-bottom: 0;
+}
+
+.relay-public-fact dt {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 0.95rem;
+}
+
+.relay-public-fact dd {
+  margin: 0;
+  color: var(--ui-text);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+  body.relay-dashboard {
+    overflow: auto;
+  }
+
+  .relay-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .relay-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .relay-dashboard-shell {
+    height: auto;
+    min-height: calc(100vh - 24px);
+  }
+
+  .relay-public-links {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .relay-dashboard-shell {
+    width: min(100vw - 20px, 100%);
+    margin-top: 12px;
+  }
+
+  .relay-metrics {
+    grid-template-columns: 1fr;
+  }
+}

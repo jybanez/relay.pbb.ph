@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PBB Relay Install Config",
+  "type": "object",
+  "required": ["schema_version", "mode", "app", "database", "admin"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "mode": { "type": "string", "enum": ["preflight", "fresh", "repair", "upgrade"] },
+    "kit": {
+      "type": "object",
+      "properties": {
+        "run_id": { "type": "string" },
+        "node_id": { "type": "string" },
+        "operator": { "type": "string" },
+        "timezone": { "type": "string" }
+      }
+    },
+    "app": {
+      "type": "object",
+      "required": ["install_path", "app_url"],
+      "properties": {
+        "install_path": { "type": "string", "minLength": 1 },
+        "public_path": { "type": "string" },
+        "app_url": { "type": "string", "minLength": 1 },
+        "app_env": { "type": "string" },
+        "app_debug": { "type": "boolean" }
+      }
+    },
+    "database": {
+      "type": "object",
+      "required": ["driver"],
+      "properties": {
+        "driver": { "type": "string", "enum": ["mysql", "sqlite"] },
+        "host": { "type": "string" },
+        "port": { "type": "integer" },
+        "database": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "sqlite_path": { "type": "string" }
+      }
+    },
+    "admin": {
+      "type": "object",
+      "required": ["name", "email", "password"],
+      "properties": {
+        "strategy": { "type": "string", "enum": ["create_if_missing"], "default": "create_if_missing" },
+        "name": { "type": "string", "minLength": 1 },
+        "email": { "type": "string", "minLength": 3 },
+        "password": { "type": "string", "minLength": 12 },
+        "must_change_password": { "type": "boolean", "default": false },
+        "overwrite_existing": { "type": "boolean", "default": false }
+      }
+    },
+    "services": {
+      "type": "object",
+      "properties": {
+        "target_os": { "type": "string" },
+        "manager": { "type": "string" },
+        "startup_mode": { "type": "string" },
+        "registration_mode": { "type": "string", "enum": ["generate", "register", "manual"] }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "properties": {
+        "mysql_binary": { "type": "string" }
+      }
+    },
+    "dependencies": { "type": "object" },
+    "relay": {
+      "type": "object",
+      "properties": {
+        "hub_id": { "type": "string" },
+        "hq_hub_id": { "type": ["integer", "string"] },
+        "hq_api_base_url": { "type": "string" },
+        "hq_api_token": { "type": "string" },
+        "targets": { "type": ["array", "object"] },
+        "hubs": { "type": ["array", "object"] },
+        "maestro_enabled": { "type": "boolean" }
+      }
+    },
+    "options": { "type": "object" }
+  }
+}

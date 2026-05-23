@@ -30,6 +30,18 @@ Because every hub runs the same system, any hub can act as:
 - a sender to its upstream hubs
 - a receiver for its downstream hubs
 
+## Canonical Hub Identity
+
+Relay-to-relay communication requires a stable identity key for each installation.
+
+Recommended rule:
+
+- the canonical relay node identity should be `relay_hub_id`
+- if a central hub registry also exposes a numeric record `id`, that `id` should be treated only as a registry reference
+- relay trust, topology, and sender matching should use the stable relay-facing hub identity rather than the registry row ID
+
+This prevents transport identity from drifting when registry internals change while still allowing the registry to keep its own primary keys.
+
 ## Scope
 
 The relay must support different payload classes, including:
@@ -416,7 +428,7 @@ Initial transport recommendation:
 
 Suggested pattern:
 
-- sender posts to `/api/hub-relay/receive`
+- sender posts to `/api/v1/receive`
 - receiver returns JSON acknowledgment
 
 Why:
@@ -786,29 +798,29 @@ The same SITREP reaches multiple upstream hubs through identical relay behavior.
 
 Core message endpoints:
 
-- `POST /api/hub-relay/receive`
+- `POST /api/v1/receive`
   - receive a single relay message with JSON payload
-- `POST /api/hub-relay/receive-batch`
+- `POST /api/v1/receive-batch`
   - optional batch receive for smaller structured messages
 
 Attachment and large-file endpoints:
 
-- `POST /api/hub-relay/upload/init`
+- `POST /api/v1/upload/init`
   - initialize attachment upload session
-- `POST /api/hub-relay/upload/chunk`
+- `POST /api/v1/upload/chunk`
   - upload one chunk for a target delivery/session
-- `POST /api/hub-relay/upload/complete`
+- `POST /api/v1/upload/complete`
   - finalize and assemble uploaded chunks
-- `GET /api/hub-relay/upload/{session}/status`
+- `GET /api/v1/upload/{session}/status`
   - return current upload progress and resumable state
-- `POST /api/hub-relay/receive-attachment`
+- `POST /api/v1/receive-attachment`
   - optional non-chunked attachment receive for smaller files
 
 ### Proposed Endpoint Contract
 
 #### 1. Structured Message Receive
 
-- `POST /api/hub-relay/receive`
+- `POST /api/v1/receive`
 
 Purpose:
 
@@ -828,7 +840,7 @@ Response:
 
 #### 2. Upload Session Initialize
 
-- `POST /api/hub-relay/upload/init`
+- `POST /api/v1/upload/init`
 
 Purpose:
 
@@ -853,7 +865,7 @@ Suggested response fields:
 
 #### 3. Upload Chunk
 
-- `POST /api/hub-relay/upload/chunk`
+- `POST /api/v1/upload/chunk`
 
 Purpose:
 
@@ -877,7 +889,7 @@ Suggested response fields:
 
 #### 4. Upload Complete
 
-- `POST /api/hub-relay/upload/complete`
+- `POST /api/v1/upload/complete`
 
 Purpose:
 
@@ -898,7 +910,7 @@ Suggested response fields:
 
 #### 5. Upload Status
 
-- `GET /api/hub-relay/upload/{session}/status`
+- `GET /api/v1/upload/{session}/status`
 
 Purpose:
 
@@ -917,13 +929,13 @@ Suggested response fields:
 
 ### Admin/Monitoring
 
-- `GET /api/hub-relay/outbox`
-- `GET /api/hub-relay/inbox`
-- `GET /api/hub-relay/deliveries`
-- `GET /api/hub-relay/deliveries/{delivery}`
-- `GET /api/hub-relay/uploads/{session}`
-- `POST /api/hub-relay/{delivery}/retry`
-- `POST /api/hub-relay/{delivery}/cancel`
+- `GET /api/v1/outbox`
+- `GET /api/v1/inbox`
+- `GET /api/v1/deliveries`
+- `GET /api/v1/deliveries/{delivery}`
+- `GET /api/v1/uploads/{session}`
+- `POST /api/v1/{delivery}/retry`
+- `POST /api/v1/{delivery}/cancel`
 
 ## Processing Architecture
 

@@ -1,0 +1,24 @@
+{
+  "name": "pbb/hub-relay-sdk",
+  "version": "0.2.0",
+  "description": "PHP convenience client for PBB - Hub Relay Server",
+  "type": "library",
+  "license": "proprietary",
+  "keywords": ["pbb", "relay", "sdk", "hub-relay"],
+  "homepage": "https://relay.pbb.ph",
+  "support": {
+    "source": "https://relay.pbb.ph"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pbb\\HubRelaySdk\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^8.2",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

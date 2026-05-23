@@ -162,8 +162,8 @@ Primary name:
 Suggested technical names:
 
 - service: `hub-relay-server`
-- local API namespace: `/api/hub-relay`
-- upstream receive API namespace: `/api/hub-relay`
+- local API namespace: `/api/v1`
+- upstream receive API namespace: `/api/v1`
 
 Optional convenience clients:
 
@@ -188,16 +188,16 @@ Recommended responsibilities:
 
 Suggested endpoints:
 
-- `POST /api/hub-relay/messages`
-- `POST /api/hub-relay/messages/{message}/attachments/init`
-- `POST /api/hub-relay/uploads/{session}/chunk`
-- `POST /api/hub-relay/uploads/{session}/complete`
-- `GET /api/hub-relay/messages`
-- `GET /api/hub-relay/messages/{message}`
-- `GET /api/hub-relay/deliveries`
-- `GET /api/hub-relay/uploads/{session}`
-- `POST /api/hub-relay/deliveries/{delivery}/retry`
-- `POST /api/hub-relay/deliveries/{delivery}/cancel`
+- `POST /api/v1/messages`
+- `POST /api/v1/messages/{message}/attachments/init`
+- `POST /api/v1/uploads/{session}/chunk`
+- `POST /api/v1/uploads/{session}/complete`
+- `GET /api/v1/messages`
+- `GET /api/v1/messages/{message}`
+- `GET /api/v1/deliveries`
+- `GET /api/v1/uploads/{session}`
+- `POST /api/v1/deliveries/{delivery}/retry`
+- `POST /api/v1/deliveries/{delivery}/cancel`
 
 ### 2. Hub-to-Hub Relay API
 
@@ -212,14 +212,14 @@ Recommended responsibilities:
 
 Suggested endpoints:
 
-- `POST /api/hub-relay/receive`
-- `POST /api/hub-relay/receive-batch`
-- `POST /api/hub-relay/upload/init`
-- `POST /api/hub-relay/upload/chunk`
-- `POST /api/hub-relay/upload/complete`
-- `GET /api/hub-relay/upload/{session}/status`
-- `GET /api/hub-relay/diagnostics`
-- `GET /api/hub-relay/compatibility`
+- `POST /api/v1/receive`
+- `POST /api/v1/receive-batch`
+- `POST /api/v1/upload/init`
+- `POST /api/v1/upload/chunk`
+- `POST /api/v1/upload/complete`
+- `GET /api/v1/upload/{session}/status`
+- `GET /api/v1/diagnostics`
+- `GET /api/v1/compatibility`
 
 ## Recommended Envelope Contract
 
@@ -259,8 +259,8 @@ Local apps query the local relay server for received messages.
 
 Examples:
 
-- `GET /api/hub-relay/inbox`
-- `GET /api/hub-relay/messages/{message}`
+- `GET /api/v1/inbox`
+- `GET /api/v1/messages/{message}`
 
 Pros:
 

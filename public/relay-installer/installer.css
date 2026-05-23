@@ -1,0 +1,590 @@
+@import url("/vendor/helpers.pbb.ph/dist/helpers.ui.bundle.min.css");
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body.relay-installer-body {
+  background:
+    radial-gradient(circle at top left, rgba(210, 231, 255, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(131, 224, 181, 0.12), transparent 24%),
+    linear-gradient(180deg, #0a1118 0%, #0d1720 50%, #111c25 100%);
+  color: var(--ui-text-strong, #eef3f8);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.relay-installer-shell {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.relay-installer-rail,
+.relay-installer-panel,
+.relay-installer-footer,
+.relay-installer-phase-placeholder {
+  background: rgba(12, 21, 31, 0.82);
+  border: 1px solid rgba(173, 213, 255, 0.12);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+}
+
+.relay-installer-rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start !important;
+  align-items: stretch;
+  gap: 20px;
+  padding: 22px;
+  min-height: 0;
+  overflow: auto;
+  align-self: stretch;
+}
+
+.relay-installer-brand,
+.relay-installer-steps {
+  flex: 0 0 auto;
+}
+
+.relay-installer-brand {
+  margin: 0;
+}
+
+.relay-installer-main {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 18px;
+}
+
+.relay-installer-panel {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(4, auto);
+  gap: 16px;
+  padding: 22px;
+  overflow: auto;
+  align-content: start;
+}
+
+.relay-installer-header {
+  align-items: start;
+  gap: 16px;
+}
+
+.relay-installer-note {
+  margin: 8px 0 0;
+  color: rgba(219, 232, 244, 0.74);
+  line-height: 1.55;
+}
+
+.relay-installer-summary {
+  display: flex;
+  align-items: flex-start;
+}
+
+.relay-installer-badge {
+  letter-spacing: 0.08em;
+}
+
+.relay-installer-badge.is-pending {
+  background: rgba(120, 145, 168, 0.18);
+  color: #d5dfeb;
+}
+
+.relay-installer-badge.is-ready {
+  background: rgba(75, 167, 106, 0.18);
+  color: #b6f0c5;
+}
+
+.relay-installer-badge.is-blocked {
+  background: rgba(217, 92, 92, 0.18);
+  color: #ffd0d0;
+}
+
+.relay-installer-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(20, 33, 46, 0.76);
+  border: 1px solid rgba(173, 213, 255, 0.1);
+}
+
+.relay-installer-statuscopy strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.relay-installer-statuscopy p {
+  margin: 6px 0 0;
+  color: rgba(219, 232, 244, 0.74);
+}
+
+.relay-installer-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-content: start;
+  padding-right: 4px;
+}
+
+.relay-installer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(16, 27, 38, 0.86);
+  border: 1px solid rgba(173, 213, 255, 0.1);
+}
+
+.relay-installer-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.relay-installer-group-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.relay-installer-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.relay-installer-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(8, 14, 21, 0.65);
+  border: 1px solid rgba(173, 213, 255, 0.08);
+}
+
+.relay-installer-check-indicator {
+  width: 11px;
+  height: 11px;
+  margin-top: 5px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+
+.relay-installer-check.is-pass .relay-installer-check-indicator,
+.relay-installer-group-badge.is-pass {
+  background: #4dad7a;
+}
+
+.relay-installer-check.is-warning .relay-installer-check-indicator,
+.relay-installer-group-badge.is-warning {
+  background: #f0b35a;
+}
+
+.relay-installer-check.is-fail .relay-installer-check-indicator,
+.relay-installer-group-badge.is-fail {
+  background: #d95c5c;
+}
+
+.relay-installer-check strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.relay-installer-check p,
+.relay-installer-check small {
+  margin: 0;
+}
+
+.relay-installer-check p {
+  color: rgba(235, 242, 248, 0.84);
+}
+
+.relay-installer-check small {
+  display: block;
+  margin-top: 6px;
+  color: rgba(219, 232, 244, 0.62);
+}
+
+.relay-installer-group-badge {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.relay-installer-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0 !important;
+  margin-block: 0 !important;
+  list-style: none;
+}
+
+.relay-installer-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(10, 17, 24, 0.56);
+  border: 1px solid rgba(173, 213, 255, 0.08);
+  color: rgba(219, 232, 244, 0.68);
+}
+
+.relay-installer-step.is-active {
+  border-color: rgba(132, 201, 255, 0.34);
+  background: rgba(19, 31, 43, 0.84);
+  color: #eef3f8;
+}
+
+.relay-installer-step p {
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+}
+
+.relay-installer-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(132, 201, 255, 0.14);
+  color: #dcecff;
+  font-weight: 700;
+}
+
+.relay-installer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+}
+
+.relay-installer-footer-copy strong {
+  display: block;
+  margin-top: 6px;
+}
+
+.relay-installer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.relay-installer-phase-placeholder {
+  padding: 18px;
+}
+
+.relay-installer-phase-card {
+  padding: 18px;
+}
+
+[data-step-panel][hidden] {
+  display: none !important;
+}
+
+.relay-installer-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.relay-installer-inline-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.relay-installer-settings-group {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.relay-installer-review {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(9, 16, 24, 0.75);
+  border: 1px solid rgba(173, 213, 255, 0.08);
+}
+
+.relay-installer-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.relay-installer-review-item {
+  display: grid;
+  gap: 4px;
+}
+
+.relay-installer-review-item strong {
+  font-size: 0.84rem;
+  color: rgba(219, 232, 244, 0.66);
+}
+
+.relay-installer-review-item span {
+  color: rgba(238, 243, 248, 0.96);
+  word-break: break-word;
+}
+
+.relay-installer-review-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.relay-installer-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.relay-installer-copy-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.relay-installer-completion-notice {
+  display: grid;
+  gap: 14px;
+}
+
+.relay-installer-completion-copy,
+.relay-installer-completion-destination {
+  margin: 0;
+  color: rgba(223, 234, 244, 0.84);
+  line-height: 1.6;
+}
+
+.relay-installer-completion-password {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(8, 14, 21, 0.72);
+  border: 1px solid rgba(173, 213, 255, 0.12);
+}
+
+.relay-installer-completion-password strong {
+  font-size: 0.84rem;
+  color: rgba(219, 232, 244, 0.66);
+}
+
+.relay-installer-completion-password-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.relay-installer-completion-password-row code {
+  flex: 1 1 auto;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(14, 24, 35, 0.92);
+  border: 1px solid rgba(173, 213, 255, 0.08);
+  color: #eef6ff;
+  font-size: 0.95rem;
+  word-break: break-all;
+}
+
+.relay-installer-completion-destination span {
+  color: #eef6ff;
+}
+
+.relay-installer-execution-head,
+.relay-installer-execution-step-head,
+.relay-installer-execution-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.relay-installer-execution-body {
+  width: min(820px, 100%);
+  max-height: min(72vh, 820px);
+  min-height: 320px;
+  overflow: hidden;
+}
+
+.relay-installer-progress-mount {
+  margin-top: 14px;
+}
+
+.relay-installer-progress-widget {
+  --ui-progress-text: rgba(219, 232, 244, 0.82);
+}
+
+.relay-installer-execution-warning,
+.relay-installer-execution-failure,
+.relay-installer-execution-success {
+  border: 1px solid rgba(173, 213, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(8, 14, 21, 0.72);
+  padding: 14px 16px;
+}
+
+.relay-installer-execution-warning {
+  color: #d8e6f4;
+}
+
+.relay-installer-execution-failure {
+  border-color: rgba(217, 92, 92, 0.24);
+}
+
+.relay-installer-execution-steps {
+  min-height: 0;
+  max-height: min(48vh, 520px);
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+}
+
+.relay-installer-execution-step {
+  border: 1px solid rgba(173, 213, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(8, 14, 21, 0.72);
+  padding: 14px 16px;
+}
+
+.relay-installer-execution-step.is-running {
+  border-color: rgba(123, 170, 220, 0.35);
+}
+
+.relay-installer-execution-step.is-completed {
+  border-color: rgba(75, 167, 106, 0.28);
+}
+
+.relay-installer-execution-step.is-failed {
+  border-color: rgba(217, 92, 92, 0.32);
+}
+
+.relay-installer-execution-step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border: 1px solid transparent;
+}
+
+.relay-installer-execution-step-badge.is-pending {
+  background: rgba(120, 145, 168, 0.16);
+  color: #d5dfeb;
+}
+
+.relay-installer-execution-step-badge.is-running {
+  background: rgba(123, 170, 220, 0.18);
+  color: #d7eaff;
+}
+
+.relay-installer-execution-step-badge.is-completed {
+  background: rgba(75, 167, 106, 0.18);
+  color: #b6f0c5;
+}
+
+.relay-installer-execution-step-badge.is-failed {
+  background: rgba(217, 92, 92, 0.18);
+  color: #ffd0d0;
+}
+
+.relay-installer-status-modal {
+  display: grid;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.relay-installer-status-modal-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.15;
+  color: #f4f8fc;
+}
+
+.relay-installer-status-modal-detail {
+  margin: 0;
+  color: #c3d1de;
+  line-height: 1.6;
+}
+
+@media (max-width: 1080px) {
+  .relay-installer-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .relay-installer-groups {
+    grid-template-columns: 1fr;
+  }
+
+  .relay-installer-form,
+  .relay-installer-settings-group,
+  .relay-installer-review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .relay-installer-execution-body {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .relay-installer-shell {
+    padding: 12px;
+  }
+
+  .relay-installer-panel,
+  .relay-installer-rail,
+  .relay-installer-footer {
+    padding: 16px;
+  }
+
+  .relay-installer-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .relay-installer-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .relay-installer-actions .ui-button {
+    flex: 1;
+  }
+}

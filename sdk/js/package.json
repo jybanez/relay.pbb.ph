@@ -1,0 +1,24 @@
+{
+  "name": "@pbb/hub-relay-client",
+  "version": "0.2.0",
+  "description": "JS convenience client for PBB - Hub Relay Server",
+  "type": "module",
+  "license": "UNLICENSED",
+  "homepage": "https://relay.pbb.ph",
+  "repository": {
+    "type": "git",
+    "url": "https://relay.pbb.ph"
+  },
+  "main": "./pbb-hub-relay-client.mjs",
+  "exports": {
+    ".": "./pbb-hub-relay-client.mjs"
+  },
+  "files": [
+    "pbb-hub-relay-client.mjs",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

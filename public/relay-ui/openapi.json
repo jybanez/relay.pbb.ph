@@ -1,0 +1,1099 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PBB - Hub Relay Server API",
+    "version": "1.1.0",
+    "description": "OpenAPI definition for the implemented PBB - Hub Relay Server local and hub-to-hub APIs."
+  },
+  "servers": [
+    {
+      "url": "https://relay.pbb.ph",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    { "name": "Shell" },
+    { "name": "Auth" },
+    { "name": "Diagnostics" },
+    { "name": "Messages" },
+    { "name": "Deliveries" },
+    { "name": "Inbox" },
+    { "name": "Handlers" },
+    { "name": "Handler Dispatches" },
+    { "name": "Attachments" },
+    { "name": "Uploads" },
+    { "name": "Hub Receive" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "LaravelSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "laravel_session"
+      },
+      "CsrfHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-TOKEN"
+      },
+      "RelayClientKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Relay-Key"
+      },
+      "RelayHubKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Relay-Hub-Key"
+      },
+      "RelayProtocolVersion": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Relay-Protocol-Version"
+      }
+    },
+    "schemas": {
+      "HopTraceEntry": {
+        "type": "object",
+        "required": ["hub_id", "event", "at"],
+        "properties": {
+          "hub_id": { "type": "string", "description": "HQ numeric hub identifier for the relay that appended this hop trace entry." },
+          "event": { "type": "string", "description": "Relay-side event recorded for this hop, such as submitted or received." },
+          "at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LocalMessageSubmitRequest": {
+        "type": "object",
+        "required": ["source_system", "target_systems", "message_type", "payload"],
+        "properties": {
+          "source_system": { "type": "string" },
+          "target_systems": {
+            "type": "array",
+            "description": "Client-owned logical audience. Relay resolves transport hops from topology and preserves this list across the journey.",
+            "items": { "type": "string" }
+          },
+          "message_type": { "type": "string" },
+          "payload_format": { "type": "string", "enum": ["json", "file", "image", "binary"] },
+          "payload_version": { "type": "string" },
+          "reference_type": { "type": "string" },
+          "reference_id": { "type": "string" },
+          "payload": { "type": "object", "additionalProperties": true },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"] },
+          "correlation_id": { "type": "string" },
+          "attachments_count": { "type": "integer" },
+          "occurred_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "content_hash": { "type": "string" }
+        }
+      },
+      "RelayHopEnvelope": {
+        "type": "object",
+        "required": ["relay_id", "origin_hq_hub_id", "source_hub_id", "source_system", "target_hq_hub_id", "target_systems", "message_type", "payload"],
+        "properties": {
+          "relay_id": { "type": "string" },
+          "origin_hq_hub_id": { "type": "string", "description": "HQ numeric hub identifier where the message originated." },
+          "source_hub_id": { "type": "string", "description": "HQ numeric hub identifier for the relay sending this hop." },
+          "source_system": { "type": "string" },
+          "target_hq_hub_id": { "type": "string", "description": "Relay-owned next-hop HQ hub identifier for this transport hop." },
+          "target_systems": {
+            "type": "array",
+            "description": "Client-owned logical audience preserved across hops.",
+            "items": { "type": "string" }
+          },
+          "hop_trace": { "type": "array", "items": { "$ref": "#/components/schemas/HopTraceEntry" } },
+          "message_type": { "type": "string" },
+          "payload_format": { "type": "string", "enum": ["json", "file", "image", "binary"] },
+          "payload_version": { "type": "string" },
+          "reference_type": { "type": "string" },
+          "reference_id": { "type": "string" },
+          "payload": { "type": "object", "additionalProperties": true },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"] },
+          "correlation_id": { "type": "string" },
+          "attachments_count": { "type": "integer" },
+          "occurred_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "content_hash": { "type": "string" }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "per_page": { "type": "integer" },
+          "current_page": { "type": "integer" },
+          "last_page": { "type": "integer" }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      },
+      "BasicError": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "error": { "type": "string" }
+        }
+      },
+      "AttachmentInitRequest": {
+        "type": "object",
+        "required": ["attachment_type", "attachment_name", "mime_type", "size_bytes"],
+        "properties": {
+          "attachment_type": { "type": "string", "enum": ["file", "image", "binary"] },
+          "attachment_name": { "type": "string" },
+          "mime_type": { "type": "string" },
+          "size_bytes": { "type": "integer" },
+          "checksum": { "type": "string" },
+          "chunk_size_bytes": { "type": "integer" },
+          "target_hub_id": { "type": "string" }
+        }
+      },
+      "UploadChunkRequest": {
+        "type": "object",
+        "required": ["chunk_index", "total_chunks"],
+        "properties": {
+          "chunk_index": { "type": "integer" },
+          "total_chunks": { "type": "integer" },
+          "chunk_checksum": { "type": "string" }
+        }
+      },
+      "UploadCompleteRequest": {
+        "type": "object",
+        "required": ["total_chunks"],
+        "properties": {
+          "total_chunks": { "type": "integer" },
+          "final_checksum": { "type": "string" }
+        }
+      },
+      "HandlerRequest": {
+        "type": "object",
+        "required": ["name", "endpoint_url"],
+        "properties": {
+          "name": { "type": "string" },
+          "endpoint_url": { "type": "string", "format": "uri" },
+          "message_type_pattern": { "type": "string" },
+          "source_system": { "type": "string" },
+          "source_hub_id": { "type": "string" },
+          "auth_token": { "type": "string" },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "HubUploadInitRequest": {
+        "type": "object",
+        "required": ["relay_id", "source_hub_id", "attachment_type", "attachment_name", "mime_type", "size_bytes"],
+        "properties": {
+          "relay_id": { "type": "string" },
+          "source_hub_id": { "type": "string" },
+          "target_hub_id": { "type": "string" },
+          "attachment_type": { "type": "string", "enum": ["file", "image", "binary"] },
+          "attachment_name": { "type": "string" },
+          "mime_type": { "type": "string" },
+          "size_bytes": { "type": "integer" },
+          "checksum": { "type": "string" },
+          "chunk_size_bytes": { "type": "integer" }
+        }
+      },
+      "BatchReceiveRequest": {
+        "type": "object",
+        "required": ["messages"],
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RelayHopEnvelope" }
+          }
+        }
+      },
+      "RelayAccount": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string" }
+        }
+      },
+      "RelayLoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password" }
+        }
+      },
+      "RelayProfileUpdateRequest": {
+        "type": "object",
+        "required": ["name", "email"],
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" }
+        }
+      },
+      "RelayPasswordUpdateRequest": {
+        "type": "object",
+        "required": ["current_password", "password", "password_confirmation"],
+        "properties": {
+          "current_password": { "type": "string", "format": "password" },
+          "password": { "type": "string", "format": "password" },
+          "password_confirmation": { "type": "string", "format": "password" }
+        }
+      },
+      "RelayCurrentUserPayload": {
+        "type": "object",
+        "properties": {
+          "authenticated": { "type": "boolean" },
+          "account": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/RelayAccount" },
+              { "type": "null" }
+            ]
+          },
+          "csrf_token": { "type": "string" }
+        }
+      },
+      "RelayCurrentUserResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "boolean" },
+          "data": { "$ref": "#/components/schemas/RelayCurrentUserPayload" },
+          "meta": { "type": ["object", "null"] },
+          "error": { "type": ["object", "null"] }
+        }
+      },
+      "RelaySessionPingPayload": {
+        "type": "object",
+        "properties": {
+          "csrf_token": { "type": "string" },
+          "touched_at": { "type": "string", "format": "date-time" },
+          "session_lifetime_minutes": { "type": "integer" }
+        }
+      },
+      "RelaySessionPingResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "boolean" },
+          "data": { "$ref": "#/components/schemas/RelaySessionPingPayload" },
+          "meta": { "type": ["object", "null"] },
+          "error": { "type": ["object", "null"] }
+        }
+      },
+      "RelayStatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "hub_id": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "version": { "type": "object", "additionalProperties": true },
+          "health": { "type": "object", "additionalProperties": true },
+          "queue": { "type": "object", "additionalProperties": true },
+          "inbox": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "BootstrapPayload": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "page": { "type": "string" }
+            }
+          },
+          "auth": {
+            "type": "object",
+            "properties": {
+              "authenticated": { "type": "boolean" },
+              "account": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/RelayAccount" },
+                  { "type": "null" }
+                ]
+              }
+            }
+          },
+          "security": {
+            "type": "object",
+            "properties": {
+              "csrfToken": { "type": "string" },
+              "sessionLifetimeMinutes": { "type": "integer" },
+              "keepaliveThresholdSeconds": { "type": "integer" }
+            }
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "bootstrapUrl": { "type": "string" },
+              "csrfTokenUrl": { "type": "string" },
+              "sessionPingUrl": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/bootstrap": {
+      "get": {
+        "tags": ["Shell"],
+        "summary": "Get application bootstrap payload",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bootstrap payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BootstrapPayload" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/csrf-token": {
+      "get": {
+        "tags": ["Shell"],
+        "summary": "Refresh CSRF token",
+        "responses": {
+          "200": {
+            "description": "CSRF token payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrfToken": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Sign in a relay operator through the shared browser shell",
+        "description": "Session-authenticated login endpoint used by the public home modal and re-auth flows.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": { "$ref": "#/components/schemas/RelayLoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated session created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RelayCurrentUserResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or credential failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current relay shell user state",
+        "description": "Returns the authenticated relay operator account when a session exists, or an unauthenticated shell payload otherwise.",
+        "responses": {
+          "200": {
+            "description": "Current user/session payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RelayCurrentUserResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Update current relay operator profile",
+        "security": [
+          { "LaravelSessionCookie": [], "CsrfHeader": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RelayProfileUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated" },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Update current relay operator password",
+        "security": [
+          { "LaravelSessionCookie": [], "CsrfHeader": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RelayPasswordUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password updated" },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Log out the current relay operator session",
+        "security": [
+          { "LaravelSessionCookie": [], "CsrfHeader": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout completed and CSRF token refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "csrf_token": { "type": "string" }
+                      }
+                    },
+                    "meta": { "type": ["object", "null"] },
+                    "error": { "type": ["object", "null"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session/ping": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Keep an authenticated browser session alive",
+        "security": [
+          { "LaravelSessionCookie": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session keepalive payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RelaySessionPingResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthenticated" }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": ["Diagnostics"],
+        "summary": "Get lightweight relay heartbeat status",
+        "responses": {
+          "200": {
+            "description": "Public relay heartbeat payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RelayStatusResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["Diagnostics"],
+        "summary": "Get minimal relay health probe response",
+        "responses": {
+          "200": {
+            "description": "Minimal health payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diagnostics": {
+      "get": {
+        "tags": ["Diagnostics"],
+        "summary": "Get relay diagnostics",
+        "responses": {
+          "200": { "description": "Diagnostics response" }
+        }
+      }
+    },
+    "/api/v1/compatibility": {
+      "get": {
+        "tags": ["Diagnostics"],
+        "summary": "Get protocol and auth compatibility metadata",
+        "responses": {
+          "200": { "description": "Compatibility response" }
+        }
+      }
+    },
+    "/api/v1/messages": {
+      "post": {
+        "tags": ["Messages"],
+        "summary": "Submit a relay message",
+        "description": "Creates an outbound relay message owned by the authenticated local client. The client supplies source_system, payload, and target_systems[]. Relay injects origin/source hub identity and computes next-hop deliveries from topology.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LocalMessageSubmitRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Queued" },
+          "422": {
+            "description": "Validation failure",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ValidationError" } } }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Messages"],
+        "summary": "List local messages",
+        "description": "Returns only outbound messages owned by the authenticated local client.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "source_system", "in": "query", "schema": { "type": "string" } },
+          { "name": "message_type", "in": "query", "schema": { "type": "string" } },
+          { "name": "priority", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Message list" } }
+      }
+    },
+    "/api/v1/messages/{message}": {
+      "get": {
+        "tags": ["Messages"],
+        "summary": "Get one local message",
+        "description": "Returns one outbound message only when it is owned by the authenticated local client.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "message", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Message detail" } }
+      }
+    },
+    "/api/v1/inbox": {
+      "get": {
+        "tags": ["Inbox"],
+        "summary": "List received inbound messages",
+        "description": "Returns inbound messages only when their target_systems[] include the authenticated local client's system_code.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "message_type", "in": "query", "schema": { "type": "string" } },
+          { "name": "source_system", "in": "query", "schema": { "type": "string" } },
+          { "name": "source_hub_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Inbox list" } }
+      }
+    },
+    "/api/v1/inbox/{message}": {
+      "get": {
+        "tags": ["Inbox"],
+        "summary": "Get one inbox message",
+        "description": "Returns one received inbound message only when its target_systems[] include the authenticated local client's system_code.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "message", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Inbox detail" } }
+      }
+    },
+    "/api/v1/deliveries": {
+      "get": {
+        "tags": ["Deliveries"],
+        "summary": "List deliveries",
+        "description": "Returns only next-hop delivery records for outbound messages owned by the authenticated local client.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "target_hq_hub_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Delivery list" } }
+      }
+    },
+    "/api/v1/deliveries/{delivery}": {
+      "get": {
+        "tags": ["Deliveries"],
+        "summary": "Get one delivery",
+        "description": "Returns one delivery only when its parent outbound message is owned by the authenticated local client.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "delivery", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Delivery detail" } }
+      }
+    },
+    "/api/v1/deliveries/{delivery}/retry": {
+      "post": {
+        "tags": ["Deliveries"],
+        "summary": "Retry a failed or dead delivery",
+        "description": "Retries a failed or dead delivery only when its parent outbound message is owned by the authenticated local client.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "delivery", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Delivery requeued" } }
+      }
+    },
+    "/api/v1/deliveries/{delivery}/cancel": {
+      "post": {
+        "tags": ["Deliveries"],
+        "summary": "Cancel a delivery",
+        "description": "Cancels a queued, sending, or failed delivery only when its parent outbound message is owned by the authenticated local client.",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "delivery", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Delivery cancelled" } }
+      }
+    },
+    "/api/v1/messages/{message}/attachments/init": {
+      "post": {
+        "tags": ["Attachments"],
+        "summary": "Initialize a local attachment upload",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "message", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AttachmentInitRequest" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Upload session initialized" } }
+      }
+    },
+    "/api/v1/attachments/{attachment}/complete": {
+      "post": {
+        "tags": ["Attachments"],
+        "summary": "Complete an attachment upload",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "attachment", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UploadCompleteRequest" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Attachment completed" } }
+      }
+    },
+    "/api/v1/uploads/{session}/chunk": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Upload a local attachment chunk",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "session", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UploadChunkRequest" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Chunk appended" } }
+      }
+    },
+    "/api/v1/uploads/{session}/complete": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Complete a local upload session",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "session", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UploadCompleteRequest" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Upload completed" } }
+      }
+    },
+    "/api/v1/uploads/{session}": {
+      "get": {
+        "tags": ["Uploads"],
+        "summary": "Get local upload session status",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "session", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Upload status" } }
+      }
+    },
+    "/api/v1/handlers": {
+      "get": {
+        "tags": ["Handlers"],
+        "summary": "List handlers for the authenticated client",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "responses": { "200": { "description": "Handler list" } }
+      },
+      "post": {
+        "tags": ["Handlers"],
+        "summary": "Create a handler",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/HandlerRequest" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Handler created" } }
+      }
+    },
+    "/api/v1/handlers/{handler}": {
+      "patch": {
+        "tags": ["Handlers"],
+        "summary": "Update a handler",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "handler", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/HandlerRequest" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Handler updated" } }
+      },
+      "delete": {
+        "tags": ["Handlers"],
+        "summary": "Deactivate a handler",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "handler", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Handler deactivated" } }
+      }
+    },
+    "/api/v1/handler-dispatches": {
+      "get": {
+        "tags": ["Handler Dispatches"],
+        "summary": "List handler dispatch attempts",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "handler_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Dispatch list" } }
+      }
+    },
+    "/api/v1/handler-dispatches/{dispatch}": {
+      "get": {
+        "tags": ["Handler Dispatches"],
+        "summary": "Get one handler dispatch",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "dispatch", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Dispatch detail" } }
+      }
+    },
+    "/api/v1/handler-dispatches/{dispatch}/retry": {
+      "post": {
+        "tags": ["Handler Dispatches"],
+        "summary": "Retry a failed or dead handler dispatch",
+        "security": [
+          { "RelayClientKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "dispatch", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Dispatch requeued" } }
+      }
+    },
+    "/api/v1/receive": {
+      "post": {
+        "tags": ["Hub Receive"],
+        "summary": "Receive one message from another relay",
+        "description": "Accepts one inbound hop envelope, enforces idempotency by relay_id, appends hop_trace, performs local delivery for matching target_systems[], and forwards to eligible adjacent relays when needed.",
+        "security": [
+          { "RelayHubKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RelayHopEnvelope" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Received" },
+          "200": { "description": "Duplicate receive" }
+        }
+      }
+    },
+    "/api/v1/receive-batch": {
+      "post": {
+        "tags": ["Hub Receive"],
+        "summary": "Receive multiple messages",
+        "description": "Accepts multiple hop envelopes in one request.",
+        "security": [
+          { "RelayHubKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BatchReceiveRequest" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Batch processed" } }
+      }
+    },
+    "/api/v1/upload/init": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Initialize a hub-to-hub upload",
+        "security": [
+          { "RelayHubKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/HubUploadInitRequest" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Inbound upload initialized" } }
+      }
+    },
+    "/api/v1/upload/chunk": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Upload a hub-to-hub chunk",
+        "security": [
+          { "RelayHubKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/UploadChunkRequest" },
+                  {
+                    "type": "object",
+                    "required": ["upload_session_id"],
+                    "properties": { "upload_session_id": { "type": "string" } }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Hub chunk appended" } }
+      }
+    },
+    "/api/v1/upload/complete": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Complete a hub-to-hub upload",
+        "security": [
+          { "RelayHubKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/UploadCompleteRequest" },
+                  {
+                    "type": "object",
+                    "required": ["upload_session_id"],
+                    "properties": { "upload_session_id": { "type": "string" } }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Hub upload completed" } }
+      }
+    },
+    "/api/v1/upload/{session}/status": {
+      "get": {
+        "tags": ["Uploads"],
+        "summary": "Get hub-to-hub upload status",
+        "security": [
+          { "RelayHubKey": [] },
+          { "RelayProtocolVersion": [] }
+        ],
+        "parameters": [
+          { "name": "session", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Hub upload status" } }
+      }
+    }
+  }
+}

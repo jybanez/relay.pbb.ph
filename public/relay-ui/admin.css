@@ -1,0 +1,535 @@
+.relay-admin-shell {
+  width: min(100vw - 24px, 100%);
+  height: calc(100vh - 24px);
+  margin: 12px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.relay-admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+.relay-admin-toolbar,
+.relay-console-bar {
+  padding-block: 14px;
+}
+
+.relay-admin-detail-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(300px, 0.75fr) minmax(0, 1.25fr);
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.relay-admin-detail-shell {
+  display: grid;
+  grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 18px;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.relay-client-detail-page {
+  min-height: 0;
+}
+
+.relay-admin-main.relay-client-detail-page.ui-panel {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.relay-client-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.relay-client-header-main {
+  display: grid;
+  gap: 4px;
+}
+
+.relay-client-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.relay-client-header-actions form {
+  margin: 0;
+}
+
+.relay-client-toolbar-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.relay-client-summary-item {
+  padding: 12px 14px;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.relay-client-summary-item strong {
+  color: var(--ui-text);
+  font: 600 14px/1.4 var(--ui-font);
+  overflow-wrap: anywhere;
+}
+
+.relay-client-grid-toolbar {
+  align-items: center;
+}
+
+.relay-client-detail-content {
+  min-height: 0;
+}
+
+#relay-client-handlers-grid {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#relay-client-handlers-grid > .relay-admin-grid-ui.ui-grid {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+#relay-client-handlers-grid > .relay-admin-grid-ui.ui-grid .ui-grid-toolbar {
+  display: none;
+}
+
+#relay-client-handlers-grid > .relay-admin-grid-ui.ui-grid .ui-grid-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(7, 13, 24, 0.78);
+}
+
+#relay-client-handlers-grid > .relay-admin-grid-ui.ui-grid.is-empty .ui-grid-table {
+  height: 100%;
+}
+
+.relay-admin-notice,
+.relay-admin-secret {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.relay-admin-notice,
+.relay-admin-secret {
+  display: grid;
+  gap: 6px;
+}
+
+.relay-admin-secret code {
+  display: block;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(8, 15, 28, 0.9);
+  color: var(--ui-text);
+  overflow-wrap: anywhere;
+}
+
+.relay-form-actions,
+.relay-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.relay-related-groups {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.relay-related-group {
+  padding: 14px;
+}
+
+.relay-related-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.relay-grid-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.relay-grid-actions form {
+  margin: 0;
+}
+
+.relay-button-danger {
+  border: 1px solid rgba(255, 120, 120, 0.3);
+  background: rgba(112, 24, 24, 0.25);
+  color: #ffd1d1;
+}
+
+.relay-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.relay-admin-shell > .ui-panel:last-child,
+.relay-admin-detail-grid > .ui-panel {
+  min-height: 0;
+}
+
+.relay-detail-grid-panel {
+  min-height: 0;
+}
+
+.relay-admin-main {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 14px;
+}
+
+.relay-admin-main.ui-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 14px;
+  align-content: normal;
+}
+
+.relay-admin-page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.relay-admin-search-input {
+  width: min(360px, 100%);
+}
+
+.relay-admin-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.relay-admin-page-content {
+  min-height: 0;
+  overflow: hidden;
+}
+
+#relay-admin-grid {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-toolbar {
+  display: none;
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(7, 13, 24, 0.78);
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid.is-empty .ui-grid-table {
+  height: 100%;
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(13, 21, 35, 0.98);
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-search {
+  width: min(360px, 100%);
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-row {
+  cursor: pointer;
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-cell,
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-col {
+  font-size: 13px;
+}
+
+#relay-admin-grid > .relay-admin-grid-ui.ui-grid .ui-grid-state-cell {
+  height: 100%;
+  min-height: 240px;
+  vertical-align: middle;
+}
+
+.relay-detail-skeleton,
+.relay-grid-skeleton {
+  min-height: 180px;
+}
+
+.relay-client-summary-skeleton,
+.relay-client-actions-skeleton {
+  min-height: 0;
+}
+
+.relay-client-actions-skeleton {
+  min-width: 220px;
+}
+
+.relay-client-summary-item-skeleton {
+  min-height: 66px;
+}
+
+.relay-client-summary-card-skeleton {
+  min-height: 0;
+}
+
+.relay-client-summary-card-skeleton .ui-skeleton-line {
+  margin-block: 0;
+}
+
+.relay-client-summary-card-skeleton .ui-skeleton-line:first-child {
+  width: 52%;
+}
+
+.relay-client-summary-card-skeleton .ui-skeleton-line:last-child {
+  width: 72%;
+}
+
+.relay-client-toolbar-loading {
+  min-height: 0;
+}
+
+.relay-client-toolbar-search-skeleton {
+  width: min(360px, 100%);
+  min-width: 260px;
+}
+
+.relay-client-toolbar-search-skeleton .ui-skeleton-line,
+.relay-client-toolbar-actions-skeleton .ui-skeleton-line,
+.relay-client-actions-skeleton .ui-skeleton-line {
+  height: 34px;
+  border-radius: 10px;
+}
+
+.relay-client-toolbar-actions-skeleton {
+  width: 220px;
+}
+
+.relay-client-actions-skeleton {
+  width: 250px;
+}
+
+.relay-detail-card {
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.relay-detail-card strong {
+  color: var(--ui-text);
+  font: 600 14px/1.4 var(--ui-font);
+  word-break: break-word;
+}
+
+.relay-swagger-panel {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: 16px;
+  background:
+    linear-gradient(180deg, rgba(11, 20, 35, 0.98), rgba(10, 18, 31, 0.98)),
+    var(--ui-bg-soft);
+}
+
+#swagger-ui {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+#swagger-ui .swagger-ui {
+  font-family: var(--ui-font);
+}
+
+#swagger-ui .swagger-ui .wrapper {
+  max-width: none;
+  padding: 0;
+}
+
+#swagger-ui .swagger-ui .opblock,
+#swagger-ui .swagger-ui .scheme-container,
+#swagger-ui .swagger-ui section.models,
+#swagger-ui .swagger-ui .responses-inner,
+#swagger-ui .swagger-ui .dialog-ux .modal-ux,
+#swagger-ui .swagger-ui .dialog-ux .modal-ux-content {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+#swagger-ui .swagger-ui .opblock {
+  overflow: hidden;
+}
+
+#swagger-ui .swagger-ui .opblock-summary {
+  align-items: center;
+}
+
+#swagger-ui .swagger-ui .opblock .opblock-summary-method {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+#swagger-ui .swagger-ui .tab {
+  padding: 0 0 10px;
+}
+
+#swagger-ui .swagger-ui .tab li {
+  border-bottom: 3px solid transparent;
+  font-weight: 700;
+}
+
+#swagger-ui .swagger-ui .tab li.active {
+  border-bottom-color: #53c7b3;
+}
+
+#swagger-ui .swagger-ui .model-box-control:focus,
+#swagger-ui .swagger-ui .models-control:focus,
+#swagger-ui .swagger-ui .opblock-summary-control:focus {
+  outline: 2px solid rgba(98, 145, 219, 0.5);
+  outline-offset: 2px;
+}
+
+#swagger-ui .swagger-ui .dialog-ux .modal-ux-header {
+  border-bottom: 1px solid rgba(102, 135, 191, 0.28);
+}
+
+#swagger-ui .swagger-ui .btn {
+  border-radius: 10px;
+}
+
+#swagger-ui .swagger-ui .btn.authorize,
+#swagger-ui .swagger-ui .btn.execute {
+  border-width: 2px;
+}
+
+#swagger-ui .swagger-ui .btn.execute {
+  color: #fff;
+}
+
+#swagger-ui .swagger-ui .btn.authorize svg,
+#swagger-ui .swagger-ui .authorization__btn svg,
+#swagger-ui .swagger-ui .expand-methods svg,
+#swagger-ui .swagger-ui .models-control svg,
+#swagger-ui .swagger-ui .model-box-control svg,
+#swagger-ui .swagger-ui .opblock-control-arrow svg {
+  fill: currentColor;
+}
+
+#swagger-ui .swagger-ui .model-box {
+  padding: 14px 16px;
+}
+
+#swagger-ui .swagger-ui .property-row {
+  line-height: 1.55;
+}
+
+#swagger-ui .swagger-ui .property-row .star {
+  color: #ff8f86;
+}
+
+#swagger-ui .swagger-ui .opblock-body pre.microlight,
+#swagger-ui .swagger-ui textarea.curl {
+  border-radius: 10px;
+}
+
+#swagger-ui .swagger-ui .copy-to-clipboard {
+  border-radius: 8px;
+}
+
+@media (max-width: 960px) {
+  .relay-admin-shell {
+    height: auto;
+    min-height: calc(100vh - 24px);
+  }
+
+  .relay-admin-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .relay-admin-detail-shell {
+    grid-template-rows: auto minmax(320px, 1fr);
+  }
+
+  .relay-client-header {
+    flex-direction: column;
+  }
+
+  .relay-client-header-actions {
+    justify-content: flex-start;
+  }
+
+  .relay-client-toolbar-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .relay-detail-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .relay-swagger-panel {
+    height: auto;
+    min-height: 65vh;
+  }
+
+  #swagger-ui {
+    overflow: visible;
+    padding-right: 0;
+  }
+}

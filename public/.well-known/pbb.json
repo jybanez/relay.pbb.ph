@@ -1,0 +1,18 @@
+{
+  "contract_version": "1",
+  "app_code": "relay",
+  "name": "PBB Relay",
+  "app_kind": "laravel-browser-app",
+  "launch_path": "/relay",
+  "health_url": "/up",
+  "access_check_url": null,
+  "embeddable": true,
+  "icon": "app-window",
+  "category": "Operations",
+  "service_auth_type": null,
+  "preferred_window": {
+    "width": 1440,
+    "height": 900
+  },
+  "workspace_notes": "Draft manifest generated from current repo state. Relay exposes /up and the operator shell at /relay, but no confirmed Workspace access-check endpoint was found in the repo."
+}

@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "app": "pbb-relay",
+  "name": "PBB Relay",
+  "repository": "https://github.com/jybanez/relay.pbb.ph",
+  "milestone": 1,
+  "version": "1.1.0",
+  "display_version": "v1-1.1.0",
+  "release_date": "2026-05-15",
+  "release_name": "Relay Installer Contract Baseline",
+  "type": "laravel",
+  "update": {
+    "contract_version": 1,
+    "channel": "testing",
+    "immutable_release": false,
+    "from_versions": ["1.1.0"],
+    "compatibility": "same-version-rebuild",
+    "requires_database_migration": false,
+    "requires_data_prep_rerun": true,
+    "requires_service_restart": true,
+    "rollback_supported": true
+  },
+  "installer_contract": {
+    "first_admin": {
+      "strategy": "create_if_missing",
+      "default_name": "PBB Administrator",
+      "default_email": "admin@pbb.local",
+      "overwrite_existing_default": false,
+      "rejects_placeholder_passwords": true
+    },
+    "database": {
+      "fresh_install_method": "baseline_schema",
+      "baseline_schema": "database/schema/mysql-schema.sql",
+      "upgrade_repair_method": "migrations"
+    }
+  },
+  "requires": {
+    "os": ["windows", "linux"],
+    "php": ">=8.2",
+    "php_extensions": ["json", "openssl", "mbstring", "fileinfo", "zip", "pdo"],
+    "mysql": ">=8.0",
+    "node": "not-required-assets-built",
+    "composer": "not-required-vendor-bundled",
+    "apps": {
+      "pbb-maestro": ">=1.0.0"
+    }
+  },
+  "installer": {
+    "interactive": "installer/index.php",
+    "unattended": "installer/install-run.php",
+    "status": "installer/status.php",
+    "schema": "installer/schema/install.schema.json",
+    "database": {
+      "fresh_install_strategy": "baseline_schema",
+      "baseline_schema": {
+        "path": "database/schema/mysql-schema.sql",
+        "engine": "mysql",
+        "generated_at": "2026-05-18T15:47:05+08:00",
+        "source": "current-release-schema"
+      },
+      "upgrade_strategy": "laravel_migrations"
+    },
+    "web_server": {
+      "owner": "kit",
+      "requirements": [],
+      "notes": "Relay has no app-specific websocket or reverse-proxy route requirements. Kit owns final vhost/include rendering and standard Laravel document-root/rewrite handling."
+    }
+  },
+  "health": {
+    "status": "/api/status"
+  },
+  "services": [
+    {
+      "id": "pbb-relay-worker",
+      "name": "PBB Relay Worker",
+      "kind": "worker",
+      "command": "php artisan queue:work --queue=relay-deliveries,relay-handlers",
+      "required": true,
+      "healthcheck": "maestro"
+    }
+  ],
+  "runtime_services": [
+    {
+      "id": "pbb-relay-worker",
+      "name": "PBB Relay Worker",
+      "type": "background_process",
+      "required": true,
+      "required_for_smoke": true,
+      "manager": "kit",
+      "working_directory": "{app.install_path}",
+      "command": "{runtime.php_binary}",
+      "args": ["artisan", "queue:work", "--queue=relay-deliveries,relay-handlers"],
+      "health_check": {
+        "type": "process",
+        "timeout_seconds": 3
+      },
+      "logs": {
+        "stdout": "storage/logs/pbb-relay-worker.out.log",
+        "stderr": "storage/logs/pbb-relay-worker.err.log"
+      },
+      "notes": "Kit starts and verifies this after Relay install so outbound deliveries, local handler dispatches, and Maestro worker telemetry can run. Maestro telemetry becomes active after Data Prep apply-settings writes the Relay telemetry token and Kit restarts the worker."
+    }
+  ],
+  "data_prep": {
+    "version": 1,
+    "capabilities": {
+      "prepare_data": false,
+      "apply_settings": true,
+      "verify": true
+    },
+    "tools": {
+      "apply_settings": {
+        "path": "tools/data-prep/apply-settings.php",
+        "config_section": "relay.data_prep.apply_settings"
+      },
+      "verify": {
+        "path": "tools/data-prep/verify.php",
+        "config_section": "relay.data_prep.verify"
+      }
+    },
+    "outputs": [
+      {
+        "id": "relay_maestro_telemetry",
+        "kind": "client_settings",
+        "target_app": "pbb-relay",
+        "secret_ref": "runtime.maestro.relay_telemetry_token"
+      }
+    ]
+  },
+  "artifacts": {
+    "install_manifest": "storage/app/installer/install-manifest.json",
+    "install_report": "storage/app/installer/install-report.json",
+    "install_log": "storage/app/installer/install.log"
+  }
+}
