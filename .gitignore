@@ -3,6 +3,8 @@
 .env
 .env.backup
 .env.production
+.env.relay_*
+.installer/
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -19,6 +21,10 @@
 /storage/*.key
 /storage/pail
 /vendor
+pbb.ph.crt
+pbb.ph.key
+tmp_*.json
+tmp_*.js
 Homestead.json
 Homestead.yaml
 Thumbs.db
