@@ -7,7 +7,7 @@ This checklist tracks the cross-project implementation for Relay's HQ heartbeat 
 - [x] Draft Relay proposal for HQ heartbeat and public hub snapshot.
 - [x] Incorporate HQ feedback on endpoint, auth, identity, wrapper shape, snapshot metadata, interval, and V1 scope.
 - [x] HQ confirms any remaining validation/error-code details.
-- [ ] Kit confirms post-Data Prep handling for the new Relay heartbeat runtime service.
+- [x] Kit confirms it consumed the new Relay heartbeat runtime service metadata.
 
 ## Hub HQ Work
 
@@ -49,9 +49,9 @@ This checklist tracks the cross-project implementation for Relay's HQ heartbeat 
 
 ## Kit Setup Work
 
-- [ ] Read the new `pbb-relay-hq-heartbeat` service from Relay `runtime_services`.
+- [x] Read the new `pbb-relay-hq-heartbeat` service from Relay `runtime_services`.
 - [ ] Register it as a persistent background process.
-- [ ] Do not require it during pre-Data Prep smoke checks.
+- [x] Do not require it during pre-Data Prep smoke checks.
 - [ ] Start it after Relay `.env`, database setup, admin provisioning, and Data Prep Apply Settings are complete.
 - [ ] Restart it after Relay HQ token/hub settings change.
 - [ ] Capture stdout/stderr using the declared log paths.
@@ -64,6 +64,8 @@ This checklist tracks the cross-project implementation for Relay's HQ heartbeat 
 - [x] Local Relay tests pass.
 - [x] Relay installer package build passes.
 - [x] Bundle checksum is copied into Kit's bundled package manifest.
+- [x] Kit build embeds Relay bundle with `pbb-relay-hq-heartbeat` metadata.
+- [x] Kit passes sanitized resolved hub snapshot to Relay under `relay.hub`.
 - [ ] Kit service-plan report shows both Relay runtime services.
 - [ ] Installed Relay has initial `public/hub.json`.
 - [ ] Installed Relay starts `pbb-relay-worker`.
