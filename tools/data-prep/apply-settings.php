@@ -48,6 +48,7 @@ if ($errors === []) {
 
             if (stringValue($settings['ca_bundle'] ?? null) !== null) {
                 $changes['RELAY_MAESTRO_CA_BUNDLE'] = stringValue($settings['ca_bundle']);
+                $changes['RELAY_HQ_HEARTBEAT_CA_BUNDLE'] = stringValue($settings['ca_bundle']);
             }
 
             $existing = readEnvFile($envPath);

@@ -25,7 +25,7 @@ return [
         'connect_timeout_seconds' => (int) env('RELAY_HQ_HEARTBEAT_CONNECT_TIMEOUT_SECONDS', 3),
         'timeout_seconds' => (int) env('RELAY_HQ_HEARTBEAT_TIMEOUT_SECONDS', 8),
         'tls_verify' => filter_var(env('RELAY_HQ_HEARTBEAT_TLS_VERIFY', true), FILTER_VALIDATE_BOOL),
-        'ca_bundle' => env('RELAY_HQ_HEARTBEAT_CA_BUNDLE'),
+        'ca_bundle' => env('RELAY_HQ_HEARTBEAT_CA_BUNDLE', env('RELAY_MAESTRO_CA_BUNDLE')),
     ],
     'hub_auth' => [
         'mode' => env('RELAY_HUB_AUTH_MODE', 'shared_key'),

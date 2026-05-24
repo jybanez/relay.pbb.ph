@@ -55,6 +55,13 @@ if ($errors === []) {
                 'ca_bundle_exists' => stringValue($env['RELAY_MAESTRO_CA_BUNDLE'] ?? null) !== null
                     && is_file((string) stringValue($env['RELAY_MAESTRO_CA_BUNDLE'] ?? null)),
             ],
+            'hq_heartbeat_ca_bundle' => [
+                'passed' => true,
+                'message' => 'RELAY_HQ_HEARTBEAT_CA_BUNDLE status was checked.',
+                'ca_bundle_configured' => stringValue($env['RELAY_HQ_HEARTBEAT_CA_BUNDLE'] ?? null) !== null,
+                'ca_bundle_exists' => stringValue($env['RELAY_HQ_HEARTBEAT_CA_BUNDLE'] ?? null) !== null
+                    && is_file((string) stringValue($env['RELAY_HQ_HEARTBEAT_CA_BUNDLE'] ?? null)),
+            ],
         ];
 
         foreach ($checks as $id => $check) {
