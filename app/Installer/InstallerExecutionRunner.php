@@ -286,6 +286,7 @@ class InstallerExecutionRunner
             'RELAY_HQ_LOCAL_RELAY_HUB_ID' => $hq['relay_hub_id'] ?? null,
             'RELAY_HQ_LOCAL_HQ_ID' => $hq['hq_hub_id'] ?? null,
             'RELAY_HQ_SYNC_ENABLED' => 'true',
+            'RELAY_HQ_HEARTBEAT_ENABLED' => 'true',
             'INSTALLER_ENABLED' => 'false',
         ]);
     }

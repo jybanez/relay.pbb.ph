@@ -628,6 +628,7 @@ final class RelayKitInstaller
             'RELAY_HQ_LOCAL_RELAY_HUB_ID' => (string) ($relay['hub_id'] ?? ''),
             'RELAY_HQ_LOCAL_HQ_ID' => (string) ($relay['hq_hub_id'] ?? ''),
             'RELAY_HQ_SYNC_ENABLED' => trim((string) ($relay['hq_api_token'] ?? '')) !== '' ? 'true' : 'false',
+            'RELAY_HQ_HEARTBEAT_ENABLED' => trim((string) ($relay['hq_api_token'] ?? '')) !== '' ? 'true' : 'false',
             'RELAY_MAESTRO_ENABLED' => ((bool) ($relay['maestro_enabled'] ?? false)) ? 'true' : 'false',
             'RELAY_MAESTRO_BASE_URL' => (string) ($maestro['base_url'] ?? ''),
             'RELAY_MAESTRO_APP_CODE' => (string) ($maestro['app_code'] ?? 'relay'),
@@ -884,27 +885,49 @@ PHP;
         ];
     }
 
-    private static function runtimeServiceDeclaration(string $installPath): array
+    private static function runtimeServiceDeclarations(string $installPath): array
     {
         return [
-            'id' => 'pbb-relay-worker',
-            'name' => 'PBB Relay Worker',
-            'type' => 'background_process',
-            'required' => true,
-            'required_for_smoke' => true,
-            'manager' => 'kit',
-            'working_directory' => $installPath,
-            'command' => PHP_BINARY,
-            'args' => ['artisan', 'queue:work', '--queue=relay-deliveries,relay-handlers'],
-            'health_check' => [
-                'type' => 'process',
-                'timeout_seconds' => 3,
+            [
+                'id' => 'pbb-relay-worker',
+                'name' => 'PBB Relay Worker',
+                'type' => 'background_process',
+                'required' => true,
+                'required_for_smoke' => true,
+                'manager' => 'kit',
+                'working_directory' => $installPath,
+                'command' => PHP_BINARY,
+                'args' => ['artisan', 'queue:work', '--queue=relay-deliveries,relay-handlers'],
+                'health_check' => [
+                    'type' => 'process',
+                    'timeout_seconds' => 3,
+                ],
+                'logs' => [
+                    'stdout' => 'storage/logs/pbb-relay-worker.out.log',
+                    'stderr' => 'storage/logs/pbb-relay-worker.err.log',
+                ],
+                'notes' => 'Kit starts and verifies this after Relay install so outbound deliveries, local handler dispatches, and Maestro worker telemetry can run. Maestro telemetry becomes active after Data Prep apply-settings writes the Relay telemetry token and Kit restarts the worker.',
             ],
-            'logs' => [
-                'stdout' => 'storage/logs/pbb-relay-worker.out.log',
-                'stderr' => 'storage/logs/pbb-relay-worker.err.log',
+            [
+                'id' => 'pbb-relay-hq-heartbeat',
+                'name' => 'PBB Relay HQ Heartbeat',
+                'type' => 'background_process',
+                'required' => true,
+                'required_for_smoke' => false,
+                'manager' => 'kit',
+                'working_directory' => $installPath,
+                'command' => PHP_BINARY,
+                'args' => ['artisan', 'relay:hq-heartbeat'],
+                'health_check' => [
+                    'type' => 'process',
+                    'timeout_seconds' => 3,
+                ],
+                'logs' => [
+                    'stdout' => 'storage/logs/pbb-relay-hq-heartbeat.out.log',
+                    'stderr' => 'storage/logs/pbb-relay-hq-heartbeat.err.log',
+                ],
+                'notes' => 'Kit starts this after Relay Data Prep applies HQ hub/token settings. It sends install-level HQ heartbeats and hydrates public/hub.json.',
             ],
-            'notes' => 'Kit starts and verifies this after Relay install so outbound deliveries, local handler dispatches, and Maestro worker telemetry can run. Maestro telemetry becomes active after Data Prep apply-settings writes the Relay telemetry token and Kit restarts the worker.',
         ];
     }
 
@@ -912,7 +935,7 @@ PHP;
     {
         $database = $config['database'];
         $installPath = self::normalizePath((string) $config['app']['install_path']);
-        $runtimeServices = [self::runtimeServiceDeclaration($installPath)];
+        $runtimeServices = self::runtimeServiceDeclarations($installPath);
 
         return [
             'schema_version' => 1,

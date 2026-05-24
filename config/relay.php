@@ -18,6 +18,15 @@ return [
         'outbound_topology_mode' => env('RELAY_HQ_OUTBOUND_TOPOLOGY_MODE', 'manual'),
         'inbound_trust_mode' => env('RELAY_HQ_INBOUND_TRUST_MODE', 'manual'),
     ],
+    'hq_heartbeat' => [
+        'enabled' => filter_var(env('RELAY_HQ_HEARTBEAT_ENABLED', env('RELAY_HQ_API_ENABLED', false)), FILTER_VALIDATE_BOOL),
+        'interval_seconds' => max(10, (int) env('RELAY_HQ_HEARTBEAT_INTERVAL_SECONDS', 60)),
+        'path' => env('RELAY_HQ_HEARTBEAT_PATH', '/api/hubs/heartbeat'),
+        'connect_timeout_seconds' => (int) env('RELAY_HQ_HEARTBEAT_CONNECT_TIMEOUT_SECONDS', 3),
+        'timeout_seconds' => (int) env('RELAY_HQ_HEARTBEAT_TIMEOUT_SECONDS', 8),
+        'tls_verify' => filter_var(env('RELAY_HQ_HEARTBEAT_TLS_VERIFY', true), FILTER_VALIDATE_BOOL),
+        'ca_bundle' => env('RELAY_HQ_HEARTBEAT_CA_BUNDLE'),
+    ],
     'hub_auth' => [
         'mode' => env('RELAY_HUB_AUTH_MODE', 'shared_key'),
         'timestamp_tolerance_seconds' => (int) env('RELAY_HUB_AUTH_TIMESTAMP_TOLERANCE_SECONDS', 300),

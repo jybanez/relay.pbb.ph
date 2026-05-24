@@ -340,15 +340,15 @@ The public snapshot should remain the last valid snapshot. Operators should be a
 - Response wrapper: `{ status, data, meta, error }`
 - Public snapshot location in response: `data.hub`
 - Snapshot metadata: `data.snapshot_version`, optional `data.snapshot_hash`
+- Identity mismatch response: `409`
 - V1 scope: monitoring plus public hub snapshot hydration only
 - Interval: 60 seconds
 - Stale threshold: roughly 3 missed heartbeats, about 180 seconds
 
 ## Remaining Open Questions
 
-1. Should HQ define a formal validation error code for token/hub cross-check mismatches?
-2. Should HQ include the accepted next heartbeat interval in every response or only when it differs from 60 seconds?
-3. Should Relay expose a local admin diagnostic endpoint for last HQ heartbeat status, or is log/report visibility enough for V1?
+1. Should HQ include the accepted next heartbeat interval in every response or only when it differs from 60 seconds?
+2. Should Relay expose a local admin diagnostic endpoint for last HQ heartbeat status, or is log/report visibility enough for V1?
 
 ## Suggested First Implementation
 

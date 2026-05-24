@@ -80,6 +80,14 @@
       "command": "php artisan queue:work --queue=relay-deliveries,relay-handlers",
       "required": true,
       "healthcheck": "maestro"
+    },
+    {
+      "id": "pbb-relay-hq-heartbeat",
+      "name": "PBB Relay HQ Heartbeat",
+      "kind": "worker",
+      "command": "php artisan relay:hq-heartbeat",
+      "required": true,
+      "healthcheck": "process"
     }
   ],
   "runtime_services": [
@@ -102,6 +110,26 @@
         "stderr": "storage/logs/pbb-relay-worker.err.log"
       },
       "notes": "Kit starts and verifies this after Relay install so outbound deliveries, local handler dispatches, and Maestro worker telemetry can run. Maestro telemetry becomes active after Data Prep apply-settings writes the Relay telemetry token and Kit restarts the worker."
+    },
+    {
+      "id": "pbb-relay-hq-heartbeat",
+      "name": "PBB Relay HQ Heartbeat",
+      "type": "background_process",
+      "required": true,
+      "required_for_smoke": false,
+      "manager": "kit",
+      "working_directory": "{app.install_path}",
+      "command": "{runtime.php_binary}",
+      "args": ["artisan", "relay:hq-heartbeat"],
+      "health_check": {
+        "type": "process",
+        "timeout_seconds": 3
+      },
+      "logs": {
+        "stdout": "storage/logs/pbb-relay-hq-heartbeat.out.log",
+        "stderr": "storage/logs/pbb-relay-hq-heartbeat.err.log"
+      },
+      "notes": "Kit starts this after Relay Data Prep applies HQ hub/token settings. It sends install-level HQ heartbeats and hydrates public/hub.json."
     }
   ],
   "data_prep": {

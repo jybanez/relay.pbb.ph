@@ -100,6 +100,12 @@ class InstallerPackageBuildServiceTest extends TestCase
         $this->assertSame('{runtime.php_binary}', $outputReleaseJson['runtime_services'][0]['command'] ?? null);
         $this->assertSame(['artisan', 'queue:work', '--queue=relay-deliveries,relay-handlers'], $outputReleaseJson['runtime_services'][0]['args'] ?? null);
         $this->assertSame('process', $outputReleaseJson['runtime_services'][0]['health_check']['type'] ?? null);
+        $this->assertSame('pbb-relay-hq-heartbeat', $outputReleaseJson['runtime_services'][1]['id'] ?? null);
+        $this->assertSame('background_process', $outputReleaseJson['runtime_services'][1]['type'] ?? null);
+        $this->assertSame(true, $outputReleaseJson['runtime_services'][1]['required'] ?? null);
+        $this->assertSame(false, $outputReleaseJson['runtime_services'][1]['required_for_smoke'] ?? null);
+        $this->assertSame(['artisan', 'relay:hq-heartbeat'], $outputReleaseJson['runtime_services'][1]['args'] ?? null);
+        $this->assertSame('process', $outputReleaseJson['runtime_services'][1]['health_check']['type'] ?? null);
         $this->assertStringContainsString(
             'database/schema/mysql-schema.sql',
             (string) file_get_contents($this->outputRoot.DIRECTORY_SEPARATOR.'checksums.sha256')
@@ -155,12 +161,15 @@ class InstallerPackageBuildServiceTest extends TestCase
         $this->assertSame($outputReleaseJson['build']['id'], $embeddedReleaseJson['build']['id'] ?? null);
         $this->assertSame('pbb-relay-worker', $embeddedReleaseJson['runtime_services'][0]['id'] ?? null);
         $this->assertSame('process', $embeddedReleaseJson['runtime_services'][0]['health_check']['type'] ?? null);
+        $this->assertSame('pbb-relay-hq-heartbeat', $embeddedReleaseJson['runtime_services'][1]['id'] ?? null);
+        $this->assertSame(false, $embeddedReleaseJson['runtime_services'][1]['required_for_smoke'] ?? null);
         $this->assertStringContainsString('database/schema/mysql-schema.sql', (string) $releaseZip->getFromName('checksums.sha256'));
         $this->assertNotFalse($releaseZip->locateName('vendor/.keep'));
         $this->assertNotFalse($releaseZip->locateName('public/.keep'));
         $this->assertFalse($releaseZip->locateName('app/Console/Commands/BuildRelayInstallerPackageCommand.php') !== false);
         $this->assertFalse($releaseZip->locateName('app/Console/Commands/CreateRelayUserCommand.php') !== false);
         $this->assertNotFalse($releaseZip->locateName('app/Console/Commands/RelayHqSyncCommand.php'));
+        $this->assertNotFalse($releaseZip->locateName('app/Console/Commands/RelayHqHeartbeatCommand.php'));
         $this->assertFalse($releaseZip->locateName('app/Installer/InstallerPackageBuildService.php') !== false);
         $this->assertFalse($releaseZip->locateName('database/seeders/DatabaseSeeder.php') !== false);
         $this->assertSame("<?php\n\n", $releaseZip->getFromName('routes/console.php'));
@@ -482,6 +491,10 @@ PHP);
             '<?php class RelayHqSyncCommand {}'
         );
         File::put(
+            $root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Console'.DIRECTORY_SEPARATOR.'Commands'.DIRECTORY_SEPARATOR.'RelayHqHeartbeatCommand.php',
+            '<?php class RelayHqHeartbeatCommand {}'
+        );
+        File::put(
             $root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Installer'.DIRECTORY_SEPARATOR.'InstallerPackageBuildService.php',
             '<?php class InstallerPackageBuildService {}'
         );
@@ -562,7 +575,7 @@ PHP);
         File::put($root.DIRECTORY_SEPARATOR.'tmp_maestro_heartbeat.json', '{}');
         File::put($root.DIRECTORY_SEPARATOR.'tmp_ui.form.modal.upstream.js', 'console.log("tmp");');
         File::put($root.DIRECTORY_SEPARATOR.'vite.config.js', 'export default {};');
-        File::put($root.DIRECTORY_SEPARATOR.'release.json', '{"app":"pbb-relay","repository":"https://github.com/jybanez/relay.pbb.ph","milestone":1,"version":"1.1.0","display_version":"v1-1.1.0","runtime_services":[{"id":"pbb-relay-worker","name":"PBB Relay Worker","type":"background_process","required":true,"required_for_smoke":true,"manager":"kit","working_directory":"{app.install_path}","command":"{runtime.php_binary}","args":["artisan","queue:work","--queue=relay-deliveries,relay-handlers"],"health_check":{"type":"process","timeout_seconds":3},"logs":{"stdout":"storage/logs/pbb-relay-worker.out.log","stderr":"storage/logs/pbb-relay-worker.err.log"},"notes":"Kit starts and verifies this after Relay install."}],"data_prep":{"version":1,"capabilities":{"prepare_data":false,"apply_settings":true,"verify":true},"tools":{"apply_settings":{"path":"tools/data-prep/apply-settings.php","config_section":"relay.data_prep.apply_settings"},"verify":{"path":"tools/data-prep/verify.php","config_section":"relay.data_prep.verify"}}}}');
+        File::put($root.DIRECTORY_SEPARATOR.'release.json', '{"app":"pbb-relay","repository":"https://github.com/jybanez/relay.pbb.ph","milestone":1,"version":"1.1.0","display_version":"v1-1.1.0","runtime_services":[{"id":"pbb-relay-worker","name":"PBB Relay Worker","type":"background_process","required":true,"required_for_smoke":true,"manager":"kit","working_directory":"{app.install_path}","command":"{runtime.php_binary}","args":["artisan","queue:work","--queue=relay-deliveries,relay-handlers"],"health_check":{"type":"process","timeout_seconds":3},"logs":{"stdout":"storage/logs/pbb-relay-worker.out.log","stderr":"storage/logs/pbb-relay-worker.err.log"},"notes":"Kit starts and verifies this after Relay install."},{"id":"pbb-relay-hq-heartbeat","name":"PBB Relay HQ Heartbeat","type":"background_process","required":true,"required_for_smoke":false,"manager":"kit","working_directory":"{app.install_path}","command":"{runtime.php_binary}","args":["artisan","relay:hq-heartbeat"],"health_check":{"type":"process","timeout_seconds":3},"logs":{"stdout":"storage/logs/pbb-relay-hq-heartbeat.out.log","stderr":"storage/logs/pbb-relay-hq-heartbeat.err.log"},"notes":"Kit starts this after Relay Data Prep applies HQ hub/token settings."}],"data_prep":{"version":1,"capabilities":{"prepare_data":false,"apply_settings":true,"verify":true},"tools":{"apply_settings":{"path":"tools/data-prep/apply-settings.php","config_section":"relay.data_prep.apply_settings"},"verify":{"path":"tools/data-prep/verify.php","config_section":"relay.data_prep.verify"}}}}');
     }
 
     private function normalizePath(string $path): string
