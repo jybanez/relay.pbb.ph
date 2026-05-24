@@ -329,6 +329,7 @@ PHP);
         $this->assertFileExists($root.DIRECTORY_SEPARATOR.'artisan');
         $this->assertFileExists($root.DIRECTORY_SEPARATOR.'composer.json');
         $this->assertFileDoesNotExist($root.DIRECTORY_SEPARATOR.'composer.lock');
+        $this->assertFileDoesNotExist($root.DIRECTORY_SEPARATOR.'installer.zip');
         $this->assertFileExists($root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Console'.DIRECTORY_SEPARATOR.'Commands'.DIRECTORY_SEPARATOR.'RelayHqSyncCommand.php');
         $this->assertFileDoesNotExist($root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Console'.DIRECTORY_SEPARATOR.'Commands'.DIRECTORY_SEPARATOR.'CreateRelayUserCommand.php');
         $this->assertDirectoryDoesNotExist($root.DIRECTORY_SEPARATOR.'database'.DIRECTORY_SEPARATOR.'seeders');

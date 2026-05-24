@@ -1224,6 +1224,7 @@ PHP;
             'pbb.ph.key',
             'phpunit.xml',
             'README.md',
+            'installer.zip',
             'vite.config.js',
         ], true);
     }

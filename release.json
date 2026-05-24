@@ -50,6 +50,9 @@
     "unattended": "installer/install-run.php",
     "status": "installer/status.php",
     "schema": "installer/schema/install.schema.json",
+    "cleanup_artifacts": [
+      "installer.zip"
+    ],
     "database": {
       "fresh_install_strategy": "baseline_schema",
       "baseline_schema": {
