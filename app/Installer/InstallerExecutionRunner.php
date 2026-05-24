@@ -15,6 +15,7 @@ class InstallerExecutionRunner
         private InstallerAdminProvisioner $adminProvisioner,
         private InstallerReleasePackageService $releasePackageService,
         private InstallerCleanupService $cleanupService,
+        private HubSnapshotWriter $hubSnapshotWriter,
     ) {}
 
     public function progress(): array
@@ -93,6 +94,20 @@ class InstallerExecutionRunner
                 $this->writeEnvironment($hq, $settings);
 
                 return 'Environment configuration written.';
+            }),
+            'write_hub_snapshot' => $this->runSimpleStep($step, function () {
+                [$hq] = $this->validatedState();
+                $path = $this->hubSnapshotWriter->writeForInstall($hq);
+                $current = is_array($this->executionState->current()['install_result'] ?? null)
+                    ? $this->executionState->current()['install_result']
+                    : [];
+                $current['hub_snapshot'] = [
+                    'path' => $path,
+                    'url' => rtrim((string) ($hq['domain'] ?? config('app.url')), '/').'/hub.json',
+                ];
+                $this->executionState->storeInstallResult($current);
+
+                return 'Public hub identity snapshot written.';
             }),
             'verify_database' => $this->runSimpleStep($step, function () {
                 [, $settings] = $this->validatedState();
@@ -185,6 +200,7 @@ class InstallerExecutionRunner
                 'admin' => $this->executionState->current()['admin_credentials'] ?? null,
                 'release' => $release,
                 'cleanup' => $cleanup,
+                'hub_snapshot' => $result['hub_snapshot'] ?? null,
             ];
 
             return $this->executionState->markCompleted($payload, $payload['admin']);

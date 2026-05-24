@@ -47,6 +47,7 @@ class InstallerFlowTest extends TestCase
         File::delete($this->cleanupManifestPath);
         File::delete($this->executionStatePath);
         File::delete($this->executionLockPath);
+        File::delete(public_path('hub.json'));
         File::deleteDirectory($this->bootstrapRoot);
         File::deleteDirectory($this->releaseExtractRoot);
         File::deleteDirectory($this->cleanupRoot);
@@ -78,6 +79,7 @@ class InstallerFlowTest extends TestCase
         File::delete($this->cleanupManifestPath);
         File::delete($this->executionStatePath);
         File::delete($this->executionLockPath);
+        File::delete(public_path('hub.json'));
         File::deleteDirectory($this->bootstrapRoot);
         File::deleteDirectory($this->releaseExtractRoot);
         File::deleteDirectory($this->cleanupRoot);
@@ -269,6 +271,7 @@ class InstallerFlowTest extends TestCase
 
         $this->assertTrue(File::exists($this->lockPath));
         $this->assertTrue(File::exists($this->envPath));
+        $this->assertTrue(File::exists(public_path('hub.json')));
         $this->assertTrue(File::exists($this->sqlitePath));
         $this->assertTrue(File::exists($this->cleanupManifestPath));
 
@@ -276,6 +279,13 @@ class InstallerFlowTest extends TestCase
         $this->assertStringContainsString('RELAY_LOCAL_HUB_ID=072217043', $envContent);
         $this->assertStringContainsString('RELAY_HQ_LOCAL_HQ_ID=10', $envContent);
         $this->assertStringContainsString('INSTALLER_ENABLED=false', $envContent);
+
+        $hub = json_decode((string) File::get(public_path('hub.json')), true);
+        $this->assertSame('https://hub.pbb.ph', $hub['base_url'] ?? null);
+        $this->assertSame(10, $hub['hub_id'] ?? null);
+        $this->assertSame('072217043', $hub['relay_hub_id'] ?? null);
+        $this->assertSame('lusaran.cebu.cebu.relay.pbb.ph', $hub['domain'] ?? null);
+        $this->assertArrayNotHasKey('token', $hub);
 
         $pdo = new \PDO('sqlite:'.$this->sqlitePath);
         $count = (int) $pdo->query("select count(*) from users where email = 'admin@lusaran.relay.local'")->fetchColumn();
@@ -370,7 +380,22 @@ class InstallerFlowTest extends TestCase
             'hq_api_base_url' => 'https://hub.pbb.ph',
             'token' => 'hq-installer-token',
             'uplinks' => [],
-            'raw_hub' => [],
+            'raw_hub' => [
+                'id' => 10,
+                'relay_hub_id' => '072217043',
+                'name' => 'Lusaran, CEBU CITY, CEBU',
+                'deployment' => 'barangay',
+                'domain' => 'lusaran.cebu.cebu.relay.pbb.ph',
+                'status' => 'active',
+                'country_code' => 'PH',
+                'reg_code' => '07',
+                'prov_code' => '0722',
+                'citymun_code' => '072217',
+                'brgy_code' => '072217043',
+                'token' => ['has_token' => true],
+                'uplinks' => [],
+                'sources' => [],
+            ],
         ], [
             'name' => 'Relay Admin',
             'email' => 'admin@lusaran.relay.local',

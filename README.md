@@ -295,10 +295,31 @@ The official Relay bundle for Kit Setup is built from the installer output and r
 C:\wamp64\www\pbb\kit-setup\packages\bundled\pbb-relay-1.1.0.zip
 ```
 
-Current bundle SHA256 after the Maestro CA bundle fix:
+The exact archive SHA256 is recorded in Kit's `packages/packages.bundled.json` for the build under test.
 
-```text
-483bea49f7f856230ad5fe00e7378e79306cfded29a34d9a50daddcf0dfb3951
+Kit should pass the resolved public HQ hub payload under `relay.hub` during install. Relay writes that sanitized payload to `public/hub.json`, exposed as `/hub.json`, so other apps and operators can inspect the node identity without reading `.env` or installer reports. The snapshot keeps public hub fields and topology (`uplinks`, `sources`) and excludes token material.
+
+Minimum handoff fields:
+
+```json
+{
+  "relay": {
+    "hub_id": "072217029",
+    "hq_hub_id": 12,
+    "hq_api_base_url": "https://hub.pbb.ph",
+    "hq_api_token": "<registry sync token>",
+    "hub": {
+      "id": 12,
+      "relay_hub_id": "072217029",
+      "name": "Guadalupe, CEBU CITY, CEBU",
+      "deployment": "barangay",
+      "domain": "guadalupe-cebu-cebu.pbb.ph",
+      "status": "active",
+      "uplinks": [],
+      "sources": []
+    }
+  }
+}
 ```
 
 Relay's `release.json` declares the required background process:

@@ -74,6 +74,10 @@
         "hq_hub_id": { "type": ["integer", "string"] },
         "hq_api_base_url": { "type": "string" },
         "hq_api_token": { "type": "string" },
+        "hub": {
+          "type": "object",
+          "description": "Resolved public HQ hub payload used to write public/hub.json. Must not contain secrets."
+        },
         "targets": { "type": ["array", "object"] },
         "hubs": { "type": ["array", "object"] },
         "maestro_enabled": { "type": "boolean" }

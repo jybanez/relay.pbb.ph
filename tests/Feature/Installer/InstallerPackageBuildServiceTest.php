@@ -295,6 +295,43 @@ $cleanup = new ReflectionMethod(RelayKitInstaller::class, 'prunePostEnvironmentI
 $cleanup->setAccessible(true);
 $cleanup->invoke(null, $argv[1]);
 
+$snapshot = new ReflectionMethod(RelayKitInstaller::class, 'writeHubSnapshot');
+$snapshot->setAccessible(true);
+$snapshot->invoke(null, $argv[1], [
+    'app' => ['app_url' => 'https://relay.pbb.ph'],
+    'relay' => [
+        'hub_id' => '072217029',
+        'hq_hub_id' => 12,
+        'hq_api_base_url' => 'https://hub.pbb.ph',
+        'hub' => [
+            'id' => 12,
+            'relay_hub_id' => '072217029',
+            'name' => 'Guadalupe, CEBU CITY, CEBU',
+            'deployment' => 'barangay',
+            'domain' => 'https://guadalupe-cebu-cebu.pbb.ph',
+            'status' => 'active',
+            'token' => ['has_token' => true],
+            'uplinks' => [[
+                'id' => 29,
+                'uplink_hub_id' => 11,
+                'uplink_type' => 'hierarchy',
+                'uplink_domain' => 'cebu-cebu.pbb.ph',
+                'priority' => 1,
+                'is_primary' => true,
+                'hub' => [
+                    'id' => 11,
+                    'name' => 'CEBU CITY, CEBU',
+                    'code' => 'cebu-cebu',
+                    'deployment' => 'city',
+                    'domain' => 'cebu-cebu.pbb.ph',
+                    'status' => 'active',
+                    'token' => 'do-not-write',
+                ],
+            ]],
+        ],
+    ],
+]);
+
 if (! is_file($argv[1].DIRECTORY_SEPARATOR.'artisan')) {
     fwrite(STDERR, "artisan missing\n");
     exit(2);
@@ -315,6 +352,21 @@ if (is_dir($argv[1].DIRECTORY_SEPARATOR.'database'.DIRECTORY_SEPARATOR.'seeders'
     exit(5);
 }
 
+$hubJson = $argv[1].DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'hub.json';
+if (! is_file($hubJson)) {
+    fwrite(STDERR, "hub.json missing\n");
+    exit(7);
+}
+$hub = json_decode(file_get_contents($hubJson), true);
+if (($hub['hub_id'] ?? null) !== 12 || ($hub['relay_hub_id'] ?? null) !== '072217029' || isset($hub['token'])) {
+    fwrite(STDERR, "hub.json payload invalid\n");
+    exit(8);
+}
+if (($hub['uplinks'][0]['hub']['token'] ?? null) !== null) {
+    fwrite(STDERR, "hub.json leaked nested token\n");
+    exit(9);
+}
+
 $console = $argv[1].DIRECTORY_SEPARATOR.'routes'.DIRECTORY_SEPARATOR.'console.php';
 if (is_file($console) && file_get_contents($console) !== "<?php\n\n") {
     fwrite(STDERR, "console routes were not sanitized\n");
@@ -328,6 +380,7 @@ PHP);
         $this->assertSame(0, $exitCode, implode(PHP_EOL, $output));
         $this->assertFileExists($root.DIRECTORY_SEPARATOR.'artisan');
         $this->assertFileExists($root.DIRECTORY_SEPARATOR.'composer.json');
+        $this->assertFileExists($root.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'hub.json');
         $this->assertFileDoesNotExist($root.DIRECTORY_SEPARATOR.'composer.lock');
         $this->assertFileDoesNotExist($root.DIRECTORY_SEPARATOR.'installer.zip');
         $this->assertFileExists($root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Console'.DIRECTORY_SEPARATOR.'Commands'.DIRECTORY_SEPARATOR.'RelayHqSyncCommand.php');

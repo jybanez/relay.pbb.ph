@@ -14,6 +14,7 @@ class InstallerExecutionService
         private InstallerAdminProvisioner $adminProvisioner,
         private InstallerReleasePackageService $releasePackageService,
         private InstallerCleanupService $cleanupService,
+        private HubSnapshotWriter $hubSnapshotWriter,
     ) {}
 
     public function execute(): array
@@ -54,6 +55,8 @@ class InstallerExecutionService
             'INSTALLER_ENABLED' => 'false',
         ]);
 
+        $hubSnapshotPath = $this->hubSnapshotWriter->writeForInstall($hq);
+
         $adminCredentials = $this->databaseService->runAgainstConnection($settings, function (string $connection) use ($admin): array {
             $this->databaseService->migrate();
 
@@ -90,6 +93,10 @@ class InstallerExecutionService
             'lock' => $lock,
             'admin' => $adminCredentials,
             'release' => $release,
+            'hub_snapshot' => [
+                'path' => $hubSnapshotPath,
+                'url' => rtrim((string) ($hq['domain'] ?? config('app.url')), '/').'/hub.json',
+            ],
             'cleanup' => [
                 'manifest' => $cleanupManifest,
                 'result' => $cleanupResult,

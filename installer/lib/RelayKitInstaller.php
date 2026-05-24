@@ -113,6 +113,7 @@ final class RelayKitInstaller
             'hq_hub_id' => '',
             'hq_api_base_url' => 'https://hub.pbb.ph',
             'hq_api_token' => '',
+            'hub' => [],
             'targets' => [],
             'hubs' => [],
             'maestro_enabled' => false,
@@ -246,6 +247,9 @@ final class RelayKitInstaller
             $steps[] = self::step('environment', 'skipped', '.env writing was disabled.');
         }
 
+        $hubSnapshot = self::writeHubSnapshot($installPath, $config);
+        $steps[] = self::step('hub-snapshot', 'success', 'Public hub identity snapshot written.');
+
         self::prepareDatabaseTarget($config);
 
         $databaseInstall = [
@@ -292,12 +296,13 @@ final class RelayKitInstaller
         $serviceArtifact = self::writeServiceArtifact($installPath, $config);
         $steps[] = self::step('services', 'success', 'Relay worker service artifact generated.');
 
-        $manifest = self::manifest($config, $serviceArtifact, $databaseInstall);
+        $manifest = self::manifest($config, $serviceArtifact, $databaseInstall, $hubSnapshot);
         self::writeJsonFile($installPath . DIRECTORY_SEPARATOR . 'storage/app/installer/install-manifest.json', $manifest);
         self::writeJsonFile($installPath . DIRECTORY_SEPARATOR . '.relay-installed.lock', [
             'installed_at' => date(DATE_ATOM),
             'relay_release_version' => self::VERSION,
             'relay_hub_id' => (string) ($config['relay']['hub_id'] ?? ''),
+            'hq_hub_id' => (string) ($config['relay']['hq_hub_id'] ?? ''),
             'app_url' => (string) ($config['app']['app_url'] ?? ''),
         ]);
 
@@ -637,6 +642,117 @@ final class RelayKitInstaller
         file_put_contents($envPath, $content);
     }
 
+    private static function writeHubSnapshot(string $installPath, array $config): array
+    {
+        $path = $installPath . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'hub.json';
+        $payload = self::hubSnapshotPayload($config);
+        self::writeJsonFile($path, $payload);
+
+        return [
+            'path' => $path,
+            'url' => rtrim((string) ($config['app']['app_url'] ?? ''), '/') . '/hub.json',
+            'hub_id' => $payload['hub_id'] ?? null,
+            'relay_hub_id' => $payload['relay_hub_id'] ?? null,
+        ];
+    }
+
+    private static function hubSnapshotPayload(array $config): array
+    {
+        $relay = is_array($config['relay'] ?? null) ? $config['relay'] : [];
+        $hub = is_array($relay['hub'] ?? null) ? $relay['hub'] : [];
+
+        $payload = self::publicHubPayload($hub);
+        $payload['base_url'] = (string) ($payload['base_url'] ?? ($relay['hq_api_base_url'] ?? 'https://hub.pbb.ph'));
+        $payload['hub_id'] = $payload['hub_id'] ?? ($relay['hq_hub_id'] ?? null);
+        $payload['relay_hub_id'] = $payload['relay_hub_id'] ?? ($relay['hub_id'] ?? null);
+        $payload['uplinks'] = is_array($payload['uplinks'] ?? null) ? $payload['uplinks'] : [];
+        $payload['sources'] = is_array($payload['sources'] ?? null) ? $payload['sources'] : [];
+
+        return self::orderedHubPayload($payload);
+    }
+
+    private static function publicHubPayload(array $hub): array
+    {
+        $payload = [
+            'base_url' => $hub['base_url'] ?? null,
+            'hub_id' => $hub['hub_id'] ?? ($hub['id'] ?? null),
+            'relay_hub_id' => $hub['relay_hub_id'] ?? null,
+            'name' => $hub['name'] ?? null,
+            'code' => $hub['code'] ?? null,
+            'deployment' => $hub['deployment'] ?? null,
+            'domain' => self::domainOnly($hub['domain'] ?? null),
+            'status' => $hub['status'] ?? null,
+            'country_code' => $hub['country_code'] ?? null,
+            'reg_code' => $hub['reg_code'] ?? null,
+            'prov_code' => $hub['prov_code'] ?? null,
+            'citymun_code' => $hub['citymun_code'] ?? null,
+            'brgy_code' => $hub['brgy_code'] ?? null,
+            'uplinks' => self::publicHubList($hub['uplinks'] ?? []),
+            'sources' => self::publicHubList($hub['sources'] ?? []),
+        ];
+
+        return array_filter($payload, static fn (mixed $value): bool => $value !== null);
+    }
+
+    private static function publicHubList(mixed $items): array
+    {
+        if (! is_array($items)) {
+            return [];
+        }
+
+        $list = [];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $entry = [];
+            foreach (['id', 'uplink_hub_id', 'source_hub_id', 'uplink_type', 'source_type', 'uplink_domain', 'source_domain', 'priority', 'is_primary'] as $key) {
+                if (array_key_exists($key, $item)) {
+                    $entry[$key] = $item[$key];
+                }
+            }
+
+            if (is_array($item['hub'] ?? null)) {
+                $entry['hub'] = array_filter([
+                    'id' => $item['hub']['id'] ?? null,
+                    'name' => $item['hub']['name'] ?? null,
+                    'code' => $item['hub']['code'] ?? null,
+                    'deployment' => $item['hub']['deployment'] ?? null,
+                    'domain' => self::domainOnly($item['hub']['domain'] ?? null),
+                    'status' => $item['hub']['status'] ?? null,
+                ], static fn (mixed $value): bool => $value !== null);
+            }
+
+            $list[] = $entry;
+        }
+
+        return $list;
+    }
+
+    private static function orderedHubPayload(array $payload): array
+    {
+        $ordered = [];
+        foreach (['base_url', 'hub_id', 'relay_hub_id', 'name', 'code', 'deployment', 'domain', 'status', 'country_code', 'reg_code', 'prov_code', 'citymun_code', 'brgy_code', 'uplinks', 'sources'] as $key) {
+            if (array_key_exists($key, $payload)) {
+                $ordered[$key] = $payload[$key];
+            }
+        }
+
+        return $ordered;
+    }
+
+    private static function domainOnly(mixed $value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $host = parse_url($value, PHP_URL_HOST);
+
+        return is_string($host) && $host !== '' ? $host : $value;
+    }
+
     private static function bootstrapAdmin(string $installPath, array $config): void
     {
         $bootstrapRoot = str_replace('\\', '/', $installPath);
@@ -792,7 +908,7 @@ PHP;
         ];
     }
 
-    private static function manifest(array $config, array $serviceArtifact, array $databaseInstall): array
+    private static function manifest(array $config, array $serviceArtifact, array $databaseInstall, array $hubSnapshot): array
     {
         $database = $config['database'];
         $installPath = self::normalizePath((string) $config['app']['install_path']);
@@ -821,7 +937,8 @@ PHP;
                 'migrations_ran' => (bool) ($databaseInstall['migrations_ran'] ?? false),
             ],
             'database_setup' => self::databaseSetupReport($databaseInstall),
-            'filesystem' => self::filesystemReport($config, $serviceArtifact),
+            'hub_snapshot' => $hubSnapshot,
+            'filesystem' => self::filesystemReport($config, $serviceArtifact, $hubSnapshot),
             'web_server' => self::webServerReport($config),
             'services' => [$serviceArtifact],
             'runtime_services' => $runtimeServices,
@@ -844,7 +961,7 @@ PHP;
         ];
     }
 
-    private static function filesystemReport(array $config, array $serviceArtifact): array
+    private static function filesystemReport(array $config, array $serviceArtifact, array $hubSnapshot = []): array
     {
         $installPath = self::normalizePath((string) $config['app']['install_path']);
         $publicPath = trim((string) ($config['app']['public_path'] ?? ''));
@@ -865,6 +982,7 @@ PHP;
             'install_manifest' => $installPath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'installer' . DIRECTORY_SEPARATOR . 'install-manifest.json',
             'install_report' => $installPath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'installer' . DIRECTORY_SEPARATOR . 'install-report.json',
             'install_lock' => $installPath . DIRECTORY_SEPARATOR . '.relay-installed.lock',
+            'public_hub_snapshot' => (string) ($hubSnapshot['path'] ?? ''),
             'service_artifact' => (string) ($serviceArtifact['artifact_path'] ?? ''),
             'worker_log' => (string) ($serviceArtifact['log_file'] ?? ''),
         ];

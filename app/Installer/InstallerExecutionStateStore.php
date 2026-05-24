@@ -14,6 +14,7 @@ class InstallerExecutionStateStore
         ['key' => 'prepare_workspace', 'label' => 'Prepare Workspace', 'pending_message' => 'Preparing installer workspace.'],
         ['key' => 'extract_release', 'label' => 'Extract Release', 'pending_message' => 'Extracting embedded Relay release package.'],
         ['key' => 'write_environment', 'label' => 'Write Environment', 'pending_message' => 'Writing environment configuration.'],
+        ['key' => 'write_hub_snapshot', 'label' => 'Write Hub Snapshot', 'pending_message' => 'Writing public hub identity snapshot.'],
         ['key' => 'verify_database', 'label' => 'Verify Database', 'pending_message' => 'Verifying target database connectivity.'],
         ['key' => 'run_migrations', 'label' => 'Run Migrations', 'pending_message' => 'Applying database migrations.'],
         ['key' => 'create_admin', 'label' => 'Create Admin', 'pending_message' => 'Creating the initial Relay admin account.'],

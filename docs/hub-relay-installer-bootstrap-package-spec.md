@@ -347,6 +347,13 @@ Required installer-derived fields:
 - `RELAY_HQ_LOCAL_RELAY_HUB_ID`
 - `RELAY_HQ_LOCAL_HQ_ID`
 
+The installer also writes a public hub identity snapshot:
+
+- `public/hub.json`
+- public URL: `/hub.json`
+
+For Kit installs, Kit should pass the resolved HQ hub payload under `relay.hub` together with `relay.hub_id`, `relay.hq_hub_id`, `relay.hq_api_base_url`, and `relay.hq_api_token`. Relay sanitizes that payload before writing it. The snapshot includes public fields such as `base_url`, `hub_id`, `relay_hub_id`, `name`, `code`, deployment/location codes, `domain`, `status`, `uplinks`, and `sources`; it must not include token material, installer secrets, or raw private registry payloads.
+
 Data Prep may later update these Maestro telemetry fields after Maestro provisions the Relay telemetry token:
 
 - `RELAY_MAESTRO_ENABLED`
