@@ -361,6 +361,53 @@ class InstallerFlowTest extends TestCase
             ->assertDontSee('Fresh Host Setup');
     }
 
+    public function test_kit_installer_defaults_upgrade_and_repair_to_cache_regeneration(): void
+    {
+        require_once base_path('installer/lib/RelayKitInstaller.php');
+
+        $upgrade = \RelayKitInstaller::normalizeConfig(['mode' => 'upgrade']);
+        $repair = \RelayKitInstaller::normalizeConfig(['mode' => 'repair']);
+        $fresh = \RelayKitInstaller::normalizeConfig(['mode' => 'fresh']);
+        $explicit = \RelayKitInstaller::normalizeConfig([
+            'mode' => 'upgrade',
+            'options' => ['cache_config' => false],
+        ]);
+
+        $this->assertTrue($upgrade['options']['cache_config']);
+        $this->assertTrue($repair['options']['cache_config']);
+        $this->assertFalse($fresh['options']['cache_config']);
+        $this->assertFalse($explicit['options']['cache_config']);
+    }
+
+    public function test_kit_installer_report_describes_upgrade_and_repair_contract(): void
+    {
+        require_once base_path('installer/lib/RelayKitInstaller.php');
+
+        $upgradeReport = \RelayKitInstaller::report(
+            \RelayKitInstaller::normalizeConfig(['mode' => 'upgrade']),
+            'success',
+            []
+        );
+        $repairReport = \RelayKitInstaller::report(
+            \RelayKitInstaller::normalizeConfig(['mode' => 'repair']),
+            'success',
+            []
+        );
+
+        $this->assertSame('upgrade', $upgradeReport['update_operation']['mode'] ?? null);
+        $this->assertTrue($upgradeReport['update_operation']['preserves_env'] ?? false);
+        $this->assertTrue($upgradeReport['update_operation']['preserves_runtime_data'] ?? false);
+        $this->assertSame('laravel_migrations', $upgradeReport['update_operation']['schema_strategy'] ?? null);
+        $this->assertTrue($upgradeReport['update_operation']['cache_regeneration_default'] ?? false);
+        $this->assertTrue($upgradeReport['update_operation']['requires_service_restart'] ?? false);
+        $this->assertTrue($upgradeReport['update_operation']['requires_data_prep_rerun'] ?? false);
+        $this->assertTrue($upgradeReport['update_operation']['rollback_supported'] ?? false);
+
+        $this->assertSame('repair', $repairReport['update_operation']['mode'] ?? null);
+        $this->assertTrue($repairReport['update_operation']['preserves_env'] ?? false);
+        $this->assertTrue($repairReport['update_operation']['preserves_runtime_data'] ?? false);
+    }
+
     private function seedReadyInstallerState(): void
     {
         app(\App\Installer\InstallerStateStore::class)->markEnvironmentChecked([

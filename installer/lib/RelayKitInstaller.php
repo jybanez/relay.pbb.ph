@@ -85,6 +85,7 @@ final class RelayKitInstaller
     public static function normalizeConfig(array $config, ?string $modeOverride = null): array
     {
         $mode = $modeOverride ?: (string) ($config['mode'] ?? 'fresh');
+        $inputOptions = is_array($config['options'] ?? null) ? $config['options'] : [];
         $config['mode'] = $mode;
         $config['app'] = array_merge([
             'app_env' => 'production',
@@ -135,7 +136,11 @@ final class RelayKitInstaller
             'cache_config' => false,
             'validate_after_install' => true,
             'overwrite_env' => false,
-        ], is_array($config['options'] ?? null) ? $config['options'] : []);
+        ], $inputOptions);
+
+        if (in_array($mode, ['upgrade', 'repair'], true) && ! array_key_exists('cache_config', $inputOptions)) {
+            $config['options']['cache_config'] = true;
+        }
 
         return $config;
     }
@@ -359,6 +364,7 @@ final class RelayKitInstaller
             'started_at' => $startedAt,
             'finished_at' => date(DATE_ATOM),
             'summary' => (string) ($extra['summary'] ?? ($status === 'success' ? 'PBB Relay installer completed.' : 'PBB Relay installer failed.')),
+            'update_operation' => self::updateOperationReport($mode),
             'steps' => $steps,
             'urls' => [
                 'app' => (string) ($config['app']['app_url'] ?? ''),
@@ -372,6 +378,24 @@ final class RelayKitInstaller
             ]] : [],
             'warnings' => $extra['warnings'] ?? [],
             'errors' => $extra['errors'] ?? [],
+        ];
+    }
+
+    private static function updateOperationReport(string $mode): array
+    {
+        $isUpdateMode = in_array($mode, ['upgrade', 'repair'], true);
+
+        return [
+            'mode' => $mode,
+            'supported' => in_array($mode, ['fresh', 'upgrade', 'repair', 'preflight'], true),
+            'preserves_env' => $isUpdateMode,
+            'preserves_runtime_data' => $isUpdateMode,
+            'schema_strategy' => $mode === 'fresh' ? 'baseline_schema_then_migrations' : 'laravel_migrations',
+            'cache_regeneration_default' => $isUpdateMode,
+            'requires_service_restart' => true,
+            'requires_data_prep_rerun' => true,
+            'rollback_supported' => true,
+            'rollback_notes' => 'Relay does not perform irreversible data migrations in this release line; rollback still requires restoring the previous app files and database backup if an operator wants to undo schema changes.',
         ];
     }
 

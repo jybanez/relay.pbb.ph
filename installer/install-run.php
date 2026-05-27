@@ -98,11 +98,17 @@ try {
     }
 
     $result = RelayKitInstaller::install($config, $mode);
+    $successSummary = match ($mode) {
+        'upgrade' => 'PBB Relay upgrade completed successfully.',
+        'repair' => 'PBB Relay repair completed successfully.',
+        default => 'PBB Relay installed successfully.',
+    };
+
     $report = RelayKitInstaller::report($config, 'success', array_merge([
         RelayKitInstaller::step('preflight', 'success', 'Blocking preflight checks passed.'),
     ], $result['steps']), [
         'started_at' => $startedAt,
-        'summary' => 'PBB Relay installed successfully.',
+        'summary' => $successSummary,
         'service_artifact' => $result['service_artifact'],
     ]);
     $report['manifest'] = $result['manifest'];
