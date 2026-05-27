@@ -120,6 +120,7 @@ class InstallerPackageBuildService
      * @var list<string>
      */
     private array $releaseExcludedDirectoryPrefixes = [
+        'database/factories',
         'database/seeders',
         'public/relay-installer',
         'public/vendor/helpers.pbb.ph/css',
@@ -130,6 +131,14 @@ class InstallerPackageBuildService
         'tools/build',
         'tools/dev',
         'tools/package',
+        'vendor/fakerphp',
+        'vendor/laravel/pail',
+        'vendor/laravel/pint',
+        'vendor/laravel/sail',
+        'vendor/mockery',
+        'vendor/nunomaduro/collision',
+        'vendor/phpunit',
+        'vendor/spatie/laravel-ignition',
     ];
 
     public function __construct(
@@ -272,6 +281,8 @@ class InstallerPackageBuildService
         array $releaseJson,
     ): void {
         $this->resetDirectory($releaseCacheRoot);
+        $packagingStageRoot = $releaseCacheRoot.DIRECTORY_SEPARATOR.'.production-stage';
+        $releaseSourceRoot = $this->prepareReleasePackagingStage($sourceRoot, $packagingStageRoot, $releaseJson);
 
         $archive = new ZipArchive();
         $opened = $archive->open($packagePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
@@ -281,7 +292,7 @@ class InstallerPackageBuildService
         }
 
         foreach ($this->releaseDirectories as $directory) {
-            $sourceDirectory = $sourceRoot.DIRECTORY_SEPARATOR.$directory;
+            $sourceDirectory = $releaseSourceRoot.DIRECTORY_SEPARATOR.$directory;
             if (! is_dir($sourceDirectory)) {
                 throw new RuntimeException("Required installer package source directory [$sourceDirectory] was not found.");
             }
@@ -290,7 +301,7 @@ class InstallerPackageBuildService
         }
 
         foreach ($this->releaseFiles as $file) {
-            $sourceFile = $sourceRoot.DIRECTORY_SEPARATOR.$file;
+            $sourceFile = $releaseSourceRoot.DIRECTORY_SEPARATOR.$file;
             if (! is_file($sourceFile)) {
                 throw new RuntimeException("Required installer package source file [$sourceFile] was not found.");
             }
@@ -306,6 +317,7 @@ class InstallerPackageBuildService
         $this->addStorageDirectoriesToZip($archive);
         $archive->addFromString('routes/console.php', "<?php\n\n");
         $archive->close();
+        $this->deleteDirectory($packagingStageRoot);
         $this->addZipChecksums($packagePath);
 
         $this->writeJsonFile(
@@ -320,6 +332,140 @@ class InstallerPackageBuildService
                 'expected_paths' => array_values((array) config('installer.release_expected_paths', [])),
             ]
         );
+    }
+
+    private function prepareReleasePackagingStage(string $sourceRoot, string $stageRoot, array $releaseJson): string
+    {
+        $this->resetDirectory($stageRoot);
+
+        foreach ($this->releaseDirectories as $directory) {
+            if ($directory === 'vendor') {
+                continue;
+            }
+
+            $this->copyDirectory(
+                $sourceRoot.DIRECTORY_SEPARATOR.$directory,
+                $stageRoot.DIRECTORY_SEPARATOR.$directory
+            );
+        }
+
+        foreach ($this->releaseFiles as $file) {
+            if ($file === 'release.json') {
+                $this->writeJsonFile($stageRoot.DIRECTORY_SEPARATOR.'release.json', $releaseJson);
+                continue;
+            }
+
+            $this->copyFile(
+                $sourceRoot.DIRECTORY_SEPARATOR.$file,
+                $stageRoot.DIRECTORY_SEPARATOR.$file
+            );
+        }
+
+        if ($this->shouldInstallProductionComposerDependencies($stageRoot)) {
+            $this->installProductionComposerDependencies($stageRoot);
+        } else {
+            $this->copyDirectory(
+                $sourceRoot.DIRECTORY_SEPARATOR.'vendor',
+                $stageRoot.DIRECTORY_SEPARATOR.'vendor'
+            );
+        }
+
+        if (! is_dir($stageRoot.DIRECTORY_SEPARATOR.'vendor')) {
+            throw new RuntimeException('Production Composer install did not create a vendor directory.');
+        }
+
+        return $stageRoot;
+    }
+
+    private function shouldInstallProductionComposerDependencies(string $stageRoot): bool
+    {
+        $composerJson = $this->readJsonFile($stageRoot.DIRECTORY_SEPARATOR.'composer.json');
+
+        return isset($composerJson['require'])
+            || isset($composerJson['require-dev'])
+            || isset($composerJson['autoload'])
+            || isset($composerJson['scripts']);
+    }
+
+    private function installProductionComposerDependencies(string $stageRoot): void
+    {
+        $composerPhar = $this->resolveComposerPhar();
+        $command = implode(' ', [
+            escapeshellarg(PHP_BINARY),
+            escapeshellarg($composerPhar),
+            'install',
+            '--no-dev',
+            '--optimize-autoloader',
+            '--no-interaction',
+            '--prefer-dist',
+            '--no-progress',
+        ]);
+
+        $this->runCommand($command, $stageRoot, 'Composer production dependency install failed');
+    }
+
+    private function resolveComposerPhar(): string
+    {
+        $configured = trim((string) getenv('RELAY_BUILD_COMPOSER_PHAR'));
+        if ($configured !== '' && is_file($configured)) {
+            return $configured;
+        }
+
+        $candidates = [
+            'C:\\ProgramData\\ComposerSetup\\bin\\composer.phar',
+            dirname((string) (getenv('COMPOSER_HOME') ?: '')).DIRECTORY_SEPARATOR.'composer.phar',
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        $command = PHP_OS_FAMILY === 'Windows'
+            ? 'where composer.phar 2>NUL'
+            : 'command -v composer.phar 2>/dev/null';
+        $output = [];
+        $exitCode = 1;
+        @exec($command, $output, $exitCode);
+
+        if ($exitCode === 0 && isset($output[0]) && is_file(trim((string) $output[0]))) {
+            return trim((string) $output[0]);
+        }
+
+        throw new RuntimeException('composer.phar was not found. Set RELAY_BUILD_COMPOSER_PHAR to build production installer packages.');
+    }
+
+    private function runCommand(string $command, string $cwd, string $failureMessage): void
+    {
+        $stdoutPath = tempnam(sys_get_temp_dir(), 'relay-build-out-');
+        $stderrPath = tempnam(sys_get_temp_dir(), 'relay-build-err-');
+        if (! is_string($stdoutPath) || ! is_string($stderrPath)) {
+            throw new RuntimeException($failureMessage.': temporary output files could not be created.');
+        }
+
+        $descriptorSpec = [
+            1 => ['file', $stdoutPath, 'w'],
+            2 => ['file', $stderrPath, 'w'],
+        ];
+
+        $process = proc_open($command, $descriptorSpec, $pipes, $cwd);
+        if (! is_resource($process)) {
+            @unlink($stdoutPath);
+            @unlink($stderrPath);
+            throw new RuntimeException($failureMessage.': process could not be started.');
+        }
+
+        $exitCode = proc_close($process);
+        $stdout = (string) @file_get_contents($stdoutPath);
+        $stderr = (string) @file_get_contents($stderrPath);
+        @unlink($stdoutPath);
+        @unlink($stderrPath);
+
+        if ($exitCode !== 0) {
+            $output = trim(implode(PHP_EOL, array_filter([$stdout, $stderr], static fn ($value) => is_string($value) && trim($value) !== '')));
+            throw new RuntimeException($failureMessage.($output !== '' ? ': '.$output : '.'));
+        }
     }
 
     private function buildInstallerArchive(
