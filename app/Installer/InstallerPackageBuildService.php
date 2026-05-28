@@ -8,6 +8,8 @@ use ZipArchive;
 class InstallerPackageBuildService
 {
     private const OFFICIAL_REPOSITORY_URL = 'https://github.com/jybanez/relay.pbb.ph';
+    private const OFFICIAL_REPOSITORY_OWNER = 'jybanez';
+    private const OFFICIAL_REPOSITORY_NAME = 'relay.pbb.ph';
 
     private string $runtimeTemplateRoot;
 
@@ -749,12 +751,13 @@ class InstallerPackageBuildService
     {
         $releaseJson = $this->readJsonFile($sourceRoot.DIRECTORY_SEPARATOR.'release.json');
         $app = (string) ($releaseJson['app'] ?? 'pbb-relay');
-        $repository = (string) ($releaseJson['repository'] ?? self::OFFICIAL_REPOSITORY_URL);
+        $repository = $this->repositoryMetadata($releaseJson['repository'] ?? null);
+        $repositoryUrl = (string) $repository['url'];
         $milestone = (int) ($releaseJson['milestone'] ?? 1);
         $version = (string) ($releaseJson['version'] ?? config('relay.version.package', '1.1.0'));
         $builtAt = new \DateTimeImmutable('now', new \DateTimeZone('Asia/Manila'));
         $timestamp = $builtAt->format('Ymd.His');
-        $gitCommit = $this->resolveGitCommit($sourceRoot, $repository);
+        $gitCommit = $this->resolveGitCommit($sourceRoot, $repositoryUrl);
 
         $releaseJson['repository'] = $repository;
         $releaseJson['milestone'] = $milestone;
@@ -783,7 +786,7 @@ class InstallerPackageBuildService
             'id' => sprintf('%s-m%d-%s-%s', $app, $milestone, $version, $timestamp),
             'built_at' => $builtAt->format(\DateTimeInterface::ATOM),
             'git_commit' => $gitCommit,
-            'repository' => $repository,
+            'repository' => $repositoryUrl,
             'builder' => self::class,
         ];
         $releaseJson['update'] = array_merge([
@@ -797,6 +800,10 @@ class InstallerPackageBuildService
             'requires_service_restart' => true,
             'rollback_supported' => true,
         ], is_array($releaseJson['update'] ?? null) ? $releaseJson['update'] : []);
+        $releaseJson['updates'] = array_merge([
+            'source' => 'github-releases',
+            'channel' => (string) ($releaseJson['update']['channel'] ?? 'testing'),
+        ], is_array($releaseJson['updates'] ?? null) ? $releaseJson['updates'] : []);
         $releaseJson['database'] = [
             'baseline_schema' => [
                 'driver' => 'mysql',
@@ -808,6 +815,22 @@ class InstallerPackageBuildService
         ];
 
         return $releaseJson;
+    }
+
+    /**
+     * @param  mixed  $source
+     * @return array{type: string, owner: string, repo: string, url: string}
+     */
+    private function repositoryMetadata(mixed $source): array
+    {
+        $source = is_array($source) ? $source : ['url' => is_string($source) && trim($source) !== '' ? $source : self::OFFICIAL_REPOSITORY_URL];
+
+        return [
+            'type' => (string) ($source['type'] ?? 'github'),
+            'owner' => (string) ($source['owner'] ?? self::OFFICIAL_REPOSITORY_OWNER),
+            'repo' => (string) ($source['repo'] ?? self::OFFICIAL_REPOSITORY_NAME),
+            'url' => (string) ($source['url'] ?? self::OFFICIAL_REPOSITORY_URL),
+        ];
     }
 
     private function addZipChecksums(string $packagePath): void

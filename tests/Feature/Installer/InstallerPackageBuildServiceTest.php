@@ -69,7 +69,10 @@ class InstallerPackageBuildServiceTest extends TestCase
         $this->assertSame('1.1.0', $outputReleaseJson['build']['version'] ?? null);
         $this->assertIsString($outputReleaseJson['build']['id'] ?? null);
         $this->assertIsString($outputReleaseJson['build']['built_at'] ?? null);
-        $this->assertSame('https://github.com/jybanez/relay.pbb.ph', $outputReleaseJson['repository'] ?? null);
+        $this->assertSame('github', $outputReleaseJson['repository']['type'] ?? null);
+        $this->assertSame('jybanez', $outputReleaseJson['repository']['owner'] ?? null);
+        $this->assertSame('relay.pbb.ph', $outputReleaseJson['repository']['repo'] ?? null);
+        $this->assertSame('https://github.com/jybanez/relay.pbb.ph', $outputReleaseJson['repository']['url'] ?? null);
         $this->assertSame('https://github.com/jybanez/relay.pbb.ph', $outputReleaseJson['build']['repository'] ?? null);
         $this->assertSame('test-build-commit', $outputReleaseJson['build']['git_commit'] ?? null);
         $this->assertSame(InstallerPackageBuildService::class, $outputReleaseJson['build']['builder'] ?? null);
@@ -80,6 +83,8 @@ class InstallerPackageBuildServiceTest extends TestCase
         $this->assertSame('same-version-rebuild', $outputReleaseJson['update']['compatibility'] ?? null);
         $this->assertSame(true, $outputReleaseJson['update']['requires_data_prep_rerun'] ?? null);
         $this->assertSame(true, $outputReleaseJson['update']['requires_service_restart'] ?? null);
+        $this->assertSame('github-releases', $outputReleaseJson['updates']['source'] ?? null);
+        $this->assertSame('testing', $outputReleaseJson['updates']['channel'] ?? null);
         $this->assertSame('database/schema/mysql-schema.sql', $outputReleaseJson['installer']['database']['baseline_schema']['path'] ?? null);
         $this->assertSame('mysql', $outputReleaseJson['installer']['database']['baseline_schema']['engine'] ?? null);
         $this->assertSame('current-release-schema', $outputReleaseJson['installer']['database']['baseline_schema']['source'] ?? null);

@@ -2,7 +2,12 @@
   "schema_version": 1,
   "app": "pbb-relay",
   "name": "PBB Relay",
-  "repository": "https://github.com/jybanez/relay.pbb.ph",
+  "repository": {
+    "type": "github",
+    "owner": "jybanez",
+    "repo": "relay.pbb.ph",
+    "url": "https://github.com/jybanez/relay.pbb.ph"
+  },
   "milestone": 1,
   "version": "1.1.0",
   "display_version": "v1-1.1.0",
@@ -19,6 +24,10 @@
     "requires_data_prep_rerun": true,
     "requires_service_restart": true,
     "rollback_supported": true
+  },
+  "updates": {
+    "source": "github-releases",
+    "channel": "testing"
   },
   "installer_contract": {
     "first_admin": {
