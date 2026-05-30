@@ -795,11 +795,26 @@ class InstallerPackageBuildService
             'immutable_release' => false,
             'from_versions' => [$version],
             'compatibility' => 'same-version-rebuild',
-            'requires_database_migration' => false,
+            'requires_database_migration' => true,
+            'database_migration' => [
+                'policy' => 'additive',
+                'destructive' => false,
+                'drops_tables' => false,
+                'drops_columns' => false,
+                'overwrites_existing_data' => false,
+            ],
             'requires_data_prep_rerun' => true,
             'requires_service_restart' => true,
             'rollback_supported' => true,
         ], is_array($releaseJson['update'] ?? null) ? $releaseJson['update'] : []);
+        $releaseJson['update']['requires_database_migration'] = true;
+        $releaseJson['update']['database_migration'] = array_merge([
+            'policy' => 'additive',
+            'destructive' => false,
+            'drops_tables' => false,
+            'drops_columns' => false,
+            'overwrites_existing_data' => false,
+        ], is_array($releaseJson['update']['database_migration'] ?? null) ? $releaseJson['update']['database_migration'] : []);
         $releaseJson['updates'] = array_merge([
             'source' => 'github-releases',
             'channel' => (string) ($releaseJson['update']['channel'] ?? 'testing'),

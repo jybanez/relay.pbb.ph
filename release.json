@@ -20,7 +20,14 @@
     "immutable_release": false,
     "from_versions": ["1.1.0"],
     "compatibility": "same-version-rebuild",
-    "requires_database_migration": false,
+    "requires_database_migration": true,
+    "database_migration": {
+      "policy": "additive",
+      "destructive": false,
+      "drops_tables": false,
+      "drops_columns": false,
+      "overwrites_existing_data": false
+    },
     "requires_data_prep_rerun": true,
     "requires_service_restart": true,
     "rollback_supported": true

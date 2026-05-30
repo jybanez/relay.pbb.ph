@@ -81,6 +81,12 @@ class InstallerPackageBuildServiceTest extends TestCase
         $this->assertSame('testing', $outputReleaseJson['update']['channel'] ?? null);
         $this->assertSame(false, $outputReleaseJson['update']['immutable_release'] ?? null);
         $this->assertSame('same-version-rebuild', $outputReleaseJson['update']['compatibility'] ?? null);
+        $this->assertSame(true, $outputReleaseJson['update']['requires_database_migration'] ?? null);
+        $this->assertSame('additive', $outputReleaseJson['update']['database_migration']['policy'] ?? null);
+        $this->assertSame(false, $outputReleaseJson['update']['database_migration']['destructive'] ?? null);
+        $this->assertSame(false, $outputReleaseJson['update']['database_migration']['drops_tables'] ?? null);
+        $this->assertSame(false, $outputReleaseJson['update']['database_migration']['drops_columns'] ?? null);
+        $this->assertSame(false, $outputReleaseJson['update']['database_migration']['overwrites_existing_data'] ?? null);
         $this->assertSame(true, $outputReleaseJson['update']['requires_data_prep_rerun'] ?? null);
         $this->assertSame(true, $outputReleaseJson['update']['requires_service_restart'] ?? null);
         $this->assertSame('github-releases', $outputReleaseJson['updates']['source'] ?? null);
