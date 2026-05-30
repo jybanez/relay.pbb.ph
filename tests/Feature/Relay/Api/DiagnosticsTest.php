@@ -140,6 +140,22 @@ class DiagnosticsTest extends TestCase
             ->assertHeader('X-Relay-Protocol-Version', '1.1');
     }
 
+    public function test_protocol_middleware_closes_http_connection_by_default(): void
+    {
+        $this->getJson('/api/v1/diagnostics')
+            ->assertOk()
+            ->assertHeader('Connection', 'close');
+    }
+
+    public function test_protocol_middleware_can_keep_http_connection_when_configured(): void
+    {
+        config(['relay.http.force_connection_close' => false]);
+
+        $this->getJson('/api/v1/diagnostics')
+            ->assertOk()
+            ->assertHeaderMissing('Connection');
+    }
+
     public function test_protocol_middleware_rejects_unsupported_version(): void
     {
         $response = $this->getJson('/api/v1/diagnostics', [

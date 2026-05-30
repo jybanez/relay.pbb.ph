@@ -47,6 +47,10 @@ return [
         ), static fn (string $value): bool => $value !== '')),
     ],
 
+    'http' => [
+        'force_connection_close' => filter_var(env('RELAY_HTTP_FORCE_CONNECTION_CLOSE', true), FILTER_VALIDATE_BOOL),
+    ],
+
     'delivery' => [
         'max_attempts' => (int) env('RELAY_DELIVERY_MAX_ATTEMPTS', 5),
         'backoff_minutes' => array_values(array_filter(array_map(

@@ -45,6 +45,10 @@ class NegotiateRelayProtocolVersion
         $response->headers->set('X-Relay-Package-Version', (string) config('relay.version.package', '1.1.0'));
         $response->headers->set('Vary', trim($response->headers->get('Vary').' ,X-Relay-Protocol-Version,Accept', ' ,'));
 
+        if ((bool) config('relay.http.force_connection_close', true)) {
+            $response->headers->set('Connection', 'close');
+        }
+
         if ($requestedVersion !== null && $requestedVersion !== $currentVersion) {
             $response->headers->set('X-Relay-Requested-Protocol-Version', $requestedVersion);
             $response->headers->set('X-Relay-Protocol-Compatibility-Mode', 'legacy');
