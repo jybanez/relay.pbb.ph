@@ -15,11 +15,11 @@ class HqHubRegistrySyncCommandTest extends TestCase
 
     public function test_hq_sync_command_caches_hubs_and_links(): void
     {
+        $this->seedHubSnapshot(14, 'barangay-hub-01');
+
         config([
             'relay.hq_registry.base_url' => 'https://hub.pbb.ph',
             'relay.hq_registry.token' => 'hq-token',
-            'relay.hq_registry.local_relay_hub_id' => 'barangay-hub-01',
-            'relay.hq_registry.local_hq_id' => 14,
             'relay.hq_registry.sync_enabled' => true,
             'relay.hq_registry.outbound_topology_mode' => 'hq_uplinks',
             'relay.hq_registry.inbound_trust_mode' => 'known_hq_hubs',

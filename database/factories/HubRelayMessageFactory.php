@@ -21,10 +21,12 @@ class HubRelayMessageFactory extends Factory
             'origin_hq_hub_id' => '10',
             'source_hub_id' => $this->faker->slug(),
             'source_system' => $this->faker->slug() . '.' . $this->faker->slug(),
-            'target_hub_ids' => ['10'],
-            'targets' => [],
-            'target_system' => $targetSystem,
-            'target_systems' => [$targetSystem],
+            'targets' => [
+                [
+                    'id' => '10',
+                    'systems' => [$targetSystem],
+                ],
+            ],
             'hop_trace' => [
                 [
                     'hub_id' => '10',

@@ -192,9 +192,7 @@ class DiagnosticsTest extends TestCase
 
     public function test_status_endpoint_returns_lightweight_heartbeat_payload(): void
     {
-        config([
-            'relay.local_hub_id' => 'relay-hub-01',
-        ]);
+        $this->seedHubSnapshot(10, 'relay-hub-01');
 
         $message = HubRelayMessage::factory()->create();
 

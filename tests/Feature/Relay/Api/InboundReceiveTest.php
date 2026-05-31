@@ -16,13 +16,13 @@ class InboundReceiveTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seedHubSnapshot(10, 'relay-hub-10');
 
         config([
             'relay.hubs' => [
                 'city-hub' => ['token' => 'shared-city-key'],
                 'barangay-hub' => ['token' => 'shared-barangay-key'],
             ],
-            'relay.hq_registry.local_hq_id' => 10,
         ]);
 
         $this->createRelayClient([
@@ -73,7 +73,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => [
                 'incident_id' => 999,
@@ -118,7 +118,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => [
                 'incident_id' => 999,
@@ -147,7 +147,7 @@ class InboundReceiveTest extends TestCase
                     'source_hub_id' => 'city-hub',
                     'source_system' => 'sitrep.app',
                     'target_hq_hub_id' => 10,
-                    'target_systems' => ['city-eoc.app'],
+                    'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
                     'message_type' => 'sitrep.record',
                     'payload' => ['id' => 1],
                 ],
@@ -157,7 +157,7 @@ class InboundReceiveTest extends TestCase
                     'source_hub_id' => 'city-hub',
                     'source_system' => 'sitrep.app',
                     'target_hq_hub_id' => 10,
-                    'target_systems' => ['city-eoc.app'],
+                    'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
                     'message_type' => 'sitrep.record',
                     'payload' => ['id' => 2],
                 ],
@@ -202,7 +202,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 456,
-            'target_systems' => ['rafi-foundation.app'],
+            'targets' => [['id' => '456', 'systems' => ['rafi-foundation.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
         ], $this->hubHeaders());
@@ -226,7 +226,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['unknown-local.app'],
+            'targets' => [['id' => '10', 'systems' => ['unknown-local.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 2],
         ], $this->hubHeaders());
@@ -253,7 +253,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'hop_trace' => [
                 [
                     'hub_id' => '10',
@@ -293,7 +293,10 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app', 'provincial-eoc.app'],
+            'targets' => [
+                ['id' => '10', 'systems' => ['city-eoc.app']],
+                ['id' => '11', 'systems' => ['provincial-eoc.app']],
+            ],
             'hop_trace' => [
                 [
                     'hub_id' => '6',
@@ -338,7 +341,10 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app', 'provincial-forwarder.app'],
+            'targets' => [
+                ['id' => '10', 'systems' => ['city-eoc.app']],
+                ['id' => '11', 'systems' => ['provincial-forwarder.app']],
+            ],
             'hop_trace' => [
                 [
                     'hub_id' => '6',
@@ -376,7 +382,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
         ]);
@@ -396,7 +402,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
         ], $this->hubHeaders('wrong-key'));
@@ -418,7 +424,7 @@ class InboundReceiveTest extends TestCase
                     'source_hub_id' => 'city-hub',
                     'source_system' => 'sitrep.app',
                     'target_hq_hub_id' => 10,
-                    'target_systems' => ['city-eoc.app'],
+                    'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
                     'message_type' => 'sitrep.record',
                     'payload' => ['id' => 1],
                 ],
@@ -428,7 +434,7 @@ class InboundReceiveTest extends TestCase
                     'source_hub_id' => 'barangay-hub',
                     'source_system' => 'sitrep.app',
                     'target_hq_hub_id' => 10,
-                    'target_systems' => ['city-eoc.app'],
+                    'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
                     'message_type' => 'sitrep.record',
                     'payload' => ['id' => 2],
                 ],
@@ -454,7 +460,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 999],
         ];
@@ -497,7 +503,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 999],
         ];
@@ -539,7 +545,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
         ], $this->mtlsHeaders());
@@ -564,7 +570,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
         ], $this->mtlsHeaders('wrongfingerprint'));
@@ -589,7 +595,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 2],
         ];
@@ -647,7 +653,7 @@ class InboundReceiveTest extends TestCase
             'source_hub_id' => 'city-hub-01',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['city-eoc.app'],
+            'targets' => [['id' => '10', 'systems' => ['city-eoc.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 3],
         ];

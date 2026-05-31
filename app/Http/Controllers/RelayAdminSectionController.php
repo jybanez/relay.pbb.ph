@@ -85,10 +85,10 @@ class RelayAdminSectionController extends Controller
                     'relay_id' => $message->relay_id,
                     'message_type' => $message->message_type,
                     'source_system' => $message->source_system,
-                    'next_hops' => collect($message->target_hub_ids ?? [])
+                    'next_hops' => collect($message->targetHubIds())
                         ->filter(fn (mixed $hubId): bool => filled($hubId))
                         ->implode(', '),
-                    'target_systems' => collect($message->target_systems ?? [])
+                    'target_systems' => collect($message->allTargetSystems())
                         ->filter(fn (mixed $system): bool => is_string($system) && trim($system) !== '')
                         ->implode(', '),
                     'delivery_statuses' => $statuses !== '' ? $statuses : 'No deliveries',
@@ -151,7 +151,7 @@ class RelayAdminSectionController extends Controller
                 'relay_id' => $delivery->message?->relay_id ?? $delivery->hub_relay_message_id,
                 'source_hub_id' => $delivery->message?->source_hub_id ?? 'unknown',
                 'target_hq_hub_id' => $delivery->target_hq_hub_id ?: $delivery->target_hub_id,
-                'target_systems' => collect($delivery->message?->target_systems ?? [])
+                'target_systems' => collect($delivery->message?->allTargetSystems() ?? [])
                     ->filter(fn (mixed $system): bool => is_string($system) && trim($system) !== '')
                     ->implode(', '),
                 'message_type' => $delivery->message?->message_type ?? 'unknown',

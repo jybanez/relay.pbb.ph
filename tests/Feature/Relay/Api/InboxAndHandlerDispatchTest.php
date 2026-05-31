@@ -19,6 +19,7 @@ class InboxAndHandlerDispatchTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seedHubSnapshot(10, 'relay-hub-10');
 
         config([
             'relay.hubs' => [
@@ -26,7 +27,6 @@ class InboxAndHandlerDispatchTest extends TestCase
                 'province-hub' => ['token' => 'shared-city-key'],
                 'orphan-hub' => ['token' => 'shared-city-key'],
             ],
-            'relay.hq_registry.local_hq_id' => 10,
         ]);
     }
 
@@ -50,7 +50,7 @@ class InboxAndHandlerDispatchTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['test.app'],
+            'targets' => [['id' => '10', 'systems' => ['test.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 100],
         ], [
@@ -104,10 +104,7 @@ class InboxAndHandlerDispatchTest extends TestCase
             'relay_id' => '01ARZ3NDEKTSV4RRFFQ69G5FBW',
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
-            'target_hub_ids' => ['10'],
-            'targets' => [['target_hq_hub_id' => '10', 'target_system' => $client->system_code]],
-            'target_system' => $client->system_code,
-            'target_systems' => [$client->system_code],
+            'targets' => [['id' => '10', 'systems' => [$client->system_code]]],
             'message_type' => 'sitrep.record',
             'payload_format' => 'json',
             'payload_version' => '1.0',
@@ -140,10 +137,7 @@ class InboxAndHandlerDispatchTest extends TestCase
             'relay_id' => '01ARZ3NDEKTSV4RRFFQ69G5FBX',
             'source_hub_id' => 'province-hub',
             'source_system' => 'case-mgmt.app',
-            'target_hub_ids' => ['10'],
-            'targets' => [['target_hq_hub_id' => '10', 'target_system' => $otherClient->system_code]],
-            'target_system' => $otherClient->system_code,
-            'target_systems' => [$otherClient->system_code],
+            'targets' => [['id' => '10', 'systems' => [$otherClient->system_code]]],
             'message_type' => 'case.record',
             'payload_format' => 'json',
             'payload_version' => '1.0',
@@ -235,7 +229,7 @@ class InboxAndHandlerDispatchTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['test.app'],
+            'targets' => [['id' => '10', 'systems' => ['test.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
         ], [
@@ -248,7 +242,7 @@ class InboxAndHandlerDispatchTest extends TestCase
             'source_hub_id' => 'province-hub',
             'source_system' => 'case-mgmt.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['client.b'],
+            'targets' => [['id' => '10', 'systems' => ['client.b']]],
             'message_type' => 'case.record',
             'payload' => ['case_id' => 2],
         ], [
@@ -261,7 +255,7 @@ class InboxAndHandlerDispatchTest extends TestCase
             'source_hub_id' => 'orphan-hub',
             'source_system' => 'orphan.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['orphan.app'],
+            'targets' => [['id' => '10', 'systems' => ['orphan.app']]],
             'message_type' => 'orphan.record',
             'payload' => ['orphan_id' => 3],
         ], [
@@ -314,10 +308,7 @@ class InboxAndHandlerDispatchTest extends TestCase
             'relay_id' => '01ARZ3NDEKTSV4RRFFQ69G5FCX',
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
-            'target_hub_ids' => ['10'],
-            'targets' => [['target_hq_hub_id' => '10', 'target_system' => 'test.app']],
-            'target_system' => 'test.app',
-            'target_systems' => ['test.app'],
+            'targets' => [['id' => '10', 'systems' => ['test.app']]],
             'message_type' => 'sitrep.record',
             'payload_format' => 'json',
             'payload_version' => '1.0',

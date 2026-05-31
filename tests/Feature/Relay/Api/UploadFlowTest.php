@@ -142,7 +142,7 @@ class UploadFlowTest extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['test.app'],
+            'targets' => [['id' => '10', 'systems' => ['test.app']]],
             'message_type' => 'attachment.file',
             'attachments_count' => 1,
             'payload' => ['incident_id' => 99],

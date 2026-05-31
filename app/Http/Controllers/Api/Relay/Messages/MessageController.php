@@ -25,7 +25,10 @@ class MessageController extends Controller
      * Expected JSON:
      * {
      *   "source_system": "sitrep.app",
-     *   "target_systems": ["city-eoc.app", "provincial-forwarder.app"],
+     *   "targets": [
+     *     {"id": 15, "systems": ["city-eoc.app"]},
+     *     {"id": 20, "systems": ["provincial-forwarder.app"]}
+     *   ],
      *   "message_type": "sitrep.record",
      *   "payload_format": "json",
      *   "payload_version": "1.0",
@@ -41,8 +44,10 @@ class MessageController extends Controller
 
             $validated = $request->validate([
                 'source_system' => 'required|string',
-                'target_systems' => 'required|array|min:1',
-                'target_systems.*' => 'required|string|max:100',
+                'targets' => 'required|array|min:1',
+                'targets.*.id' => 'required',
+                'targets.*.systems' => 'required|array|min:1',
+                'targets.*.systems.*' => 'required|string|max:100',
                 'message_type' => 'required|string',
                 'payload_format' => 'nullable|string|in:json,file,image,binary',
                 'payload_version' => 'nullable|string',

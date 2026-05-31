@@ -23,7 +23,7 @@
                 </div>
                 <div class="relay-hero-actions">
                     <a class="ui-button ui-button-ghost" href="/relay">Dashboard</a>
-                    <a class="ui-button ui-button-ghost" href="{{ asset('relay-ui/openapi.json') }}" target="_blank" rel="noreferrer">OpenAPI JSON</a>
+                    <a class="ui-button ui-button-ghost" href="{{ $openApiUrl }}" target="_blank" rel="noreferrer">OpenAPI JSON</a>
                     <a class="ui-button ui-button-ghost" href="/api/v1/compatibility" target="_blank" rel="noreferrer">Compatibility JSON</a>
                 </div>
             </div>
@@ -34,7 +34,7 @@
     <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
         window.ui = SwaggerUIBundle({
-            url: @json(asset('relay-ui/openapi.json')),
+            url: @json($openApiUrl),
             dom_id: '#swagger-ui',
             deepLinking: true,
             docExpansion: 'list',

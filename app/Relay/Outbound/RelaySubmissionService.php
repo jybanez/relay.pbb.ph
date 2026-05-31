@@ -43,10 +43,7 @@ class RelaySubmissionService
             'origin_hq_hub_id' => $envelope->origin_hq_hub_id,
             'source_hub_id' => $envelope->source_hub_id,
             'source_system' => $envelope->source_system,
-            'target_hub_ids' => [],
-            'targets' => [],
-            'target_system' => $envelope->targetSystems()[0] ?? '',
-            'target_systems' => $envelope->targetSystems(),
+            'targets' => $envelope->targets,
             'hop_trace' => $envelope->hop_trace,
             'message_type' => $envelope->message_type,
             'payload_format' => $envelope->payload_format,
@@ -64,7 +61,11 @@ class RelaySubmissionService
 
         // Create a delivery record for each eligible next-hop relay.
         $deliveries = [];
-        $nextHopHubIds = $this->topology->nextHopHubIds($envelope->visitedHubIds());
+        $nextHopHubIds = $this->topology->nextHopHubIds(
+            $envelope->visitedHubIds(),
+            null,
+            $envelope->targetHqHubIds(),
+        );
 
         foreach ($nextHopHubIds as $targetHubId) {
             $delivery = HubRelayDelivery::create([
@@ -79,10 +80,6 @@ class RelaySubmissionService
             ProcessRelayDelivery::dispatch($delivery->id)
                 ->onQueue((string) config('relay.delivery.queue', 'relay-deliveries'));
         }
-
-        $message->forceFill([
-            'target_hub_ids' => collect($nextHopHubIds)->values()->all(),
-        ])->save();
 
         return [
             'message' => $message,

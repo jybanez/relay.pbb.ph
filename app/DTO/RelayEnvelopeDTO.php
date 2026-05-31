@@ -2,6 +2,7 @@
 
 namespace App\DTO;
 
+use App\Models\HubRelayMessage;
 use Carbon\Carbon;
 
 /**
@@ -19,6 +20,7 @@ class RelayEnvelopeDTO
         public string $source_system,
         public string $target_hq_hub_id,
         public array $target_systems,
+        public array $targets,
         public array $hop_trace,
         public string $message_type,
         public string $payload_format,
@@ -47,6 +49,7 @@ class RelayEnvelopeDTO
             source_system: $data['source_system'],
             target_hq_hub_id: (string) $data['target_hq_hub_id'],
             target_systems: self::normalizeTargetSystems($data),
+            targets: self::normalizeTargets($data),
             hop_trace: self::normalizeHopTrace($data),
             message_type: $data['message_type'],
             payload_format: $data['payload_format'] ?? 'json',
@@ -75,7 +78,7 @@ class RelayEnvelopeDTO
             'source_hub_id' => $this->source_hub_id,
             'source_system' => $this->source_system,
             'target_hq_hub_id' => $this->target_hq_hub_id,
-            'target_systems' => $this->target_systems,
+            'targets' => $this->targets,
             'hop_trace' => $this->hop_trace,
             'message_type' => $this->message_type,
             'payload_format' => $this->payload_format,
@@ -110,13 +113,51 @@ class RelayEnvelopeDTO
 
     public function targetHqHubIds(): array
     {
-        return [$this->target_hq_hub_id];
+        $targets = collect($this->targets)
+            ->pluck('id')
+            ->map(fn ($id): string => (string) $id)
+            ->filter(fn (string $id): bool => $id !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        return $targets !== [] ? $targets : [$this->target_hq_hub_id];
     }
 
     public function targetSystems(): array
     {
+        $systems = collect($this->targets)
+            ->flatMap(fn (array $target): array => $target['systems'] ?? [])
+            ->map(fn ($value) => (string) $value)
+            ->filter(fn (string $value): bool => $value !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($systems !== []) {
+            return $systems;
+        }
+
         return collect($this->target_systems)
             ->map(fn ($value) => (string) $value)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public function targetSystemsForHub(string|int|null $hubId): array
+    {
+        if ($hubId === null || $hubId === '') {
+            return [];
+        }
+
+        $hubId = (string) $hubId;
+
+        return collect($this->targets)
+            ->filter(fn (array $target): bool => (string) ($target['id'] ?? '') === $hubId)
+            ->flatMap(fn (array $target): array => $target['systems'] ?? [])
+            ->map(fn ($value) => (string) $value)
+            ->filter(fn (string $value): bool => $value !== '')
             ->unique()
             ->values()
             ->all();
@@ -145,11 +186,42 @@ class RelayEnvelopeDTO
 
     private static function normalizeTargetSystems(array $data): array
     {
+        $fromTargets = collect(self::normalizeTargets($data))
+            ->flatMap(fn (array $target): array => $target['systems'])
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($fromTargets !== []) {
+            return $fromTargets;
+        }
+
         return collect($data['target_systems'] ?? [])
             ->filter(fn ($value) => is_string($value) || is_numeric($value))
             ->map(fn ($value) => (string) $value)
             ->values()
             ->all();
+    }
+
+    private static function normalizeTargets(array $data): array
+    {
+        $targets = HubRelayMessage::normalizeTargets($data['targets'] ?? []);
+
+        if ($targets !== []) {
+            return $targets;
+        }
+
+        $targetHqHubId = $data['target_hq_hub_id'] ?? null;
+        $targetSystems = $data['target_systems'] ?? [];
+
+        if (($targetHqHubId === null && $targetHqHubId !== 0) || ! is_array($targetSystems)) {
+            return [];
+        }
+
+        return HubRelayMessage::normalizeTargets([[
+            'id' => $targetHqHubId,
+            'systems' => $targetSystems,
+        ]]);
     }
 
     private static function normalizeHopTrace(array $data): array

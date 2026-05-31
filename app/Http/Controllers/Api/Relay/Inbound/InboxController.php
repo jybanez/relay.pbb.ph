@@ -5,18 +5,22 @@ namespace App\Http\Controllers\Api\Relay\Inbound;
 use App\Http\Controllers\Controller;
 use App\Models\HubRelayClient;
 use App\Models\HubRelayMessage;
+use App\Relay\Registry\RelayNodeIdentityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class InboxController extends Controller
 {
+    public function __construct(
+        private RelayNodeIdentityService $nodeIdentity,
+    ) {}
+
     public function index(Request $request): JsonResponse
     {
         $client = $this->relayClient($request);
 
         $query = HubRelayMessage::query()
             ->whereHas('receipt')
-            ->whereJsonContains('target_systems', $client->system_code)
             ->with('receipt')
             ->latest('created_at');
 
@@ -37,11 +41,18 @@ class InboxController extends Controller
         }
 
         $messages = $query->paginate($request->integer('limit', 25));
+        $filtered = collect($messages->items())
+            ->filter(fn (HubRelayMessage $message): bool => in_array(
+                $client->system_code,
+                $message->targetSystemsForHub($this->nodeIdentity->localHqId()),
+                true
+            ))
+            ->values();
 
         return response()->json([
-            'data' => $messages->items(),
+            'data' => $filtered->all(),
             'pagination' => [
-                'total' => $messages->total(),
+                'total' => $filtered->count(),
                 'per_page' => $messages->perPage(),
                 'current_page' => $messages->currentPage(),
                 'last_page' => $messages->lastPage(),
@@ -53,7 +64,11 @@ class InboxController extends Controller
     {
         abort_unless($message->receipt()->exists(), 404);
         abort_unless(
-            in_array($this->relayClient($request)->system_code, $message->target_systems ?? [], true),
+            in_array(
+                $this->relayClient($request)->system_code,
+                $message->targetSystemsForHub($this->nodeIdentity->localHqId()),
+                true
+            ),
             404
         );
 

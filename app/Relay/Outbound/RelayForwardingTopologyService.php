@@ -11,9 +11,20 @@ class RelayForwardingTopologyService
         private RelayNodeIdentityService $nodeIdentity,
     ) {}
 
-    public function nextHopHubIds(array $visitedHubIds = [], ?string $excludeHubId = null): array
+    public function nextHopHubIds(array $visitedHubIds = [], ?string $excludeHubId = null, array $targetHubIds = []): array
     {
         $localHqId = $this->nodeIdentity->localHqId();
+        $targetHubIds = collect($targetHubIds)
+            ->map(fn ($value): string => (string) $value)
+            ->filter(fn (string $hubId): bool => $hubId !== '')
+            ->reject(fn (string $hubId): bool => $localHqId !== null && $hubId === (string) $localHqId)
+            ->reject(fn (string $hubId): bool => in_array($hubId, $visitedHubIds, true))
+            ->values()
+            ->all();
+
+        if ($targetHubIds === []) {
+            return [];
+        }
 
         if ($localHqId === null) {
             return collect(array_keys(config('relay.targets', [])))
@@ -21,6 +32,7 @@ class RelayForwardingTopologyService
                 ->reject(fn (string $hubId) => $hubId === '')
                 ->reject(fn (string $hubId) => $excludeHubId !== null && $hubId === (string) $excludeHubId)
                 ->reject(fn (string $hubId) => in_array($hubId, $visitedHubIds, true))
+                ->filter(fn (string $hubId): bool => in_array($hubId, $targetHubIds, true))
                 ->values()
                 ->all();
         }

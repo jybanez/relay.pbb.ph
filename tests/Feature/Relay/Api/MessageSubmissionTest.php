@@ -13,12 +13,17 @@ class MessageSubmissionTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seedHubSnapshot(10, 'relay-hub-10');
+    }
+
     public function test_submit_message_creates_message_and_deliveries(): void
     {
         $client = $this->createRelayClient();
         Queue::fake();
         config([
-            'relay.hq_registry.local_hq_id' => 10,
             'relay.targets' => [
                 '11' => ['base_url' => 'https://relay-b.test'],
                 '456' => ['base_url' => 'https://relay-c.test'],
@@ -27,10 +32,15 @@ class MessageSubmissionTest extends TestCase
 
         $payload = [
             'source_system' => 'sitrep.app',
-            'target_systems' => [
-                'city-eoc.app',
-                'provincial-forwarder.app',
-                'rafi-foundation.app',
+            'targets' => [
+                [
+                    'id' => 11,
+                    'systems' => ['city-eoc.app', 'provincial-forwarder.app'],
+                ],
+                [
+                    'id' => 456,
+                    'systems' => ['rafi-foundation.app'],
+                ],
             ],
             'message_type' => 'sitrep.record',
             'payload' => [
@@ -64,11 +74,14 @@ class MessageSubmissionTest extends TestCase
         $this->assertEquals('10', $message->source_hub_id);
         $this->assertEquals('10', $message->origin_hq_hub_id);
         $this->assertEquals('sitrep.app', $message->source_system);
-        $this->assertSame(['11', '456'], $message->target_hub_ids);
         $this->assertSame(
-            ['city-eoc.app', 'provincial-forwarder.app', 'rafi-foundation.app'],
-            $message->target_systems
+            [
+                ['id' => '11', 'systems' => ['city-eoc.app', 'provincial-forwarder.app']],
+                ['id' => '456', 'systems' => ['rafi-foundation.app']],
+            ],
+            $message->targets
         );
+        $this->assertSame(['11', '456'], $message->targetHubIds());
         $this->assertEquals('sitrep.record', $message->message_type);
         $this->assertEquals(2, $message->deliveries()->count());
 
@@ -80,7 +93,7 @@ class MessageSubmissionTest extends TestCase
         $this->createRelayClient();
 
         $response = $this->postJson('/api/v1/messages', [
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 10, 'systems' => ['sitrep.app']]],
             // Missing other required fields
         ], $this->relayHeaders());
 
@@ -204,7 +217,7 @@ class MessageSubmissionTest extends TestCase
     {
         $response = $this->postJson('/api/v1/messages', [
             'source_system' => 'sitrep.app',
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 10, 'systems' => ['sitrep.app']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 123],
         ]);

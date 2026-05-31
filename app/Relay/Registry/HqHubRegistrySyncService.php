@@ -11,6 +11,7 @@ class HqHubRegistrySyncService
 {
     public function __construct(
         private HqHubRegistryClient $client,
+        private RelayNodeIdentityService $nodeIdentity,
     ) {}
 
     /**
@@ -22,8 +23,8 @@ class HqHubRegistrySyncService
         $now = now();
         $syncedHubIds = [];
         $syncedLinks = 0;
-        $localRelayHubId = $this->configuredLocalRelayHubId();
-        $localHqId = $this->configuredLocalHqId();
+        $localRelayHubId = $this->nodeIdentity->localHubId();
+        $localHqId = $this->localHqId();
 
         DB::transaction(function () use ($hubs, $now, &$syncedHubIds, &$syncedLinks, $localRelayHubId, $localHqId): void {
             foreach ($hubs as $hub) {
@@ -118,8 +119,8 @@ class HqHubRegistrySyncService
         RelayNodeSetting::query()->updateOrCreate(
             ['id' => 1],
             [
-                'local_relay_hub_id' => $this->configuredLocalRelayHubId(),
-                'local_hq_id' => $this->configuredLocalHqId(),
+                'local_relay_hub_id' => $this->nodeIdentity->localHubId(),
+                'local_hq_id' => $this->localHqId(),
                 'hq_sync_enabled' => (bool) config('relay.hq_registry.sync_enabled', false),
                 'hq_last_sync_at' => now(),
                 'hq_last_sync_status' => 'failed',
@@ -156,20 +157,9 @@ class HqHubRegistrySyncService
         );
     }
 
-    private function configuredLocalRelayHubId(): ?string
+    private function localHqId(): ?int
     {
-        $value = config('relay.hq_registry.local_relay_hub_id');
-
-        if (! is_string($value) || trim($value) === '') {
-            return null;
-        }
-
-        return trim($value);
-    }
-
-    private function configuredLocalHqId(): ?int
-    {
-        $value = config('relay.hq_registry.local_hq_id');
+        $value = $this->nodeIdentity->localHqId();
 
         if ($value === null || $value === '') {
             return null;

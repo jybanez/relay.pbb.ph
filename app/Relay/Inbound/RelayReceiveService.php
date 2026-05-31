@@ -93,10 +93,7 @@ class RelayReceiveService
             [
                 'origin_hq_hub_id' => $storedEnvelope->origin_hq_hub_id,
                 'source_system' => $storedEnvelope->source_system,
-                'target_hub_ids' => [],
-                'targets' => [],
-                'target_system' => $storedEnvelope->targetSystems()[0] ?? '',
-                'target_systems' => $storedEnvelope->targetSystems(),
+                'targets' => $storedEnvelope->targets,
                 'hop_trace' => $storedEnvelope->hop_trace,
                 'message_type' => $storedEnvelope->message_type,
                 'payload_format' => $storedEnvelope->payload_format,
@@ -113,8 +110,10 @@ class RelayReceiveService
             ],
         );
 
+        $localTargetSystems = $storedEnvelope->targetSystemsForHub($localHqId);
+
         $knownTargetSystems = HubRelayClient::query()
-            ->whereIn('system_code', $storedEnvelope->targetSystems())
+            ->whereIn('system_code', $localTargetSystems)
             ->pluck('system_code')
             ->values();
 
@@ -123,7 +122,7 @@ class RelayReceiveService
         if ($knownTargetSystems->isEmpty() && $forwardedCount === 0) {
             $receipt = $this->idempotency->markAsUndeliverable(
                 $receipt,
-                'No registered local client for target systems: '.collect($storedEnvelope->targetSystems())
+                'No registered local client for target systems: '.collect($localTargetSystems)
                     ->implode(', ')
             );
 
@@ -139,7 +138,7 @@ class RelayReceiveService
 
         $receipt = $this->idempotency->markAsProcessed(
             $receipt,
-            $this->processingNotes($storedEnvelope->targetSystems(), $knownTargetSystems->all(), $matchedHandlers, $forwardedCount),
+            $this->processingNotes($localTargetSystems, $knownTargetSystems->all(), $matchedHandlers, $forwardedCount),
         );
 
         return [
@@ -179,9 +178,13 @@ class RelayReceiveService
 
     private function processingNotes(array $targetSystems, array $knownTargetSystems, int $matchedHandlers, int $forwardedCount): string
     {
-        $notes = $matchedHandlers > 0
+        if ($targetSystems === [] && $forwardedCount > 0) {
+            $notes = 'No local target systems for this relay.';
+        } else {
+            $notes = $matchedHandlers > 0
             ? 'Queued for '.$matchedHandlers.' local handler(s).'
             : 'No matching local handlers. Message is available through inbox APIs.';
+        }
 
         if ($forwardedCount > 0) {
             $notes .= ' Forwarded to '.$forwardedCount.' next-hop relay(s).';
@@ -203,7 +206,8 @@ class RelayReceiveService
     {
         $nextHopHubIds = $this->topology->nextHopHubIds(
             $envelope->visitedHubIds(),
-            $envelope->source_hub_id
+            $envelope->source_hub_id,
+            $envelope->targetHqHubIds(),
         );
 
         if ($nextHopHubIds === []) {
@@ -226,10 +230,6 @@ class RelayReceiveService
                     ->onQueue((string) config('relay.delivery.queue', 'relay-deliveries'));
             }
         }
-
-        $message->forceFill([
-            'target_hub_ids' => collect($nextHopHubIds)->values()->all(),
-        ])->save();
 
         return $count;
     }

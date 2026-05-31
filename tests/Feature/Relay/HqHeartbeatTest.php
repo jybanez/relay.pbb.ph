@@ -36,11 +36,15 @@ class HqHeartbeatTest extends TestCase
             'app.url' => 'https://relay.pbb.ph',
             'relay.hq_registry.base_url' => 'https://hub.pbb.ph',
             'relay.hq_registry.token' => 'hub-token',
-            'relay.local_hub_id' => null,
-            'relay.hq_registry.local_relay_hub_id' => '072217029',
-            'relay.hq_registry.local_hq_id' => 12,
             'relay.hq_heartbeat.enabled' => true,
         ]);
+
+        File::put($this->publicPath.DIRECTORY_SEPARATOR.'hub.json', json_encode([
+            'hub_id' => 12,
+            'relay_hub_id' => '072217029',
+            'name' => 'Initial Snapshot',
+            'hydrated_from' => 'install',
+        ], JSON_PRETTY_PRINT).PHP_EOL);
 
         Http::fake([
             'https://hub.pbb.ph/api/hubs/heartbeat' => Http::response([
@@ -113,14 +117,12 @@ class HqHeartbeatTest extends TestCase
         config([
             'relay.hq_registry.base_url' => 'https://hub.pbb.ph',
             'relay.hq_registry.token' => 'hub-token',
-            'relay.local_hub_id' => null,
-            'relay.hq_registry.local_relay_hub_id' => '072217029',
-            'relay.hq_registry.local_hq_id' => 12,
             'relay.hq_heartbeat.enabled' => true,
         ]);
 
         $path = $this->publicPath.DIRECTORY_SEPARATOR.'hub.json';
         File::put($path, json_encode([
+            'hub_id' => 12,
             'relay_hub_id' => '072217029',
             'name' => 'Last Valid Snapshot',
             'hydrated_from' => 'install',

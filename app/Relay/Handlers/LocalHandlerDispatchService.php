@@ -7,13 +7,18 @@ use App\Models\HubRelayHandler;
 use App\Models\HubRelayHandlerDispatch;
 use App\Models\HubRelayMessage;
 use App\Models\HubRelayReceipt;
+use App\Relay\Registry\RelayNodeIdentityService;
 use Illuminate\Support\Str;
 
 class LocalHandlerDispatchService
 {
+    public function __construct(
+        private RelayNodeIdentityService $nodeIdentity,
+    ) {}
+
     public function dispatchForInboundMessage(HubRelayMessage $message, HubRelayReceipt $receipt): int
     {
-        $targetSystems = collect($message->target_systems ?? [])
+        $targetSystems = collect($message->targetSystemsForHub($this->nodeIdentity->localHqId()))
             ->filter(fn ($systemCode) => is_string($systemCode) && $systemCode !== '')
             ->values();
 

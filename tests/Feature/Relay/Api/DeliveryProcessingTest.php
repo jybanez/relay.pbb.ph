@@ -34,17 +34,13 @@ class DeliveryProcessingTest extends TestCase
         ]);
 
         $message = HubRelayMessage::factory()->create([
-            'target_hub_ids' => ['city-hub'],
-            'targets' => [['target_hq_hub_id' => 'city-hub', 'target_system' => 'sitrep.app']],
-            'target_system' => 'sitrep.app',
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 'city-hub', 'systems' => ['sitrep.app']]],
         ]);
 
         $delivery = HubRelayDelivery::create([
             'hub_relay_message_id' => $message->id,
             'target_hub_id' => 'city-hub',
             'target_hq_hub_id' => 'city-hub',
-            'target_system' => 'sitrep.app',
             'status' => HubRelayDelivery::STATUS_QUEUED,
         ]);
 
@@ -79,17 +75,13 @@ class DeliveryProcessingTest extends TestCase
         ]);
 
         $message = HubRelayMessage::factory()->create([
-            'target_hub_ids' => ['city-hub'],
-            'targets' => [['target_hq_hub_id' => 'city-hub', 'target_system' => 'sitrep.app']],
-            'target_system' => 'sitrep.app',
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 'city-hub', 'systems' => ['sitrep.app']]],
         ]);
 
         $delivery = HubRelayDelivery::create([
             'hub_relay_message_id' => $message->id,
             'target_hub_id' => 'city-hub',
             'target_hq_hub_id' => 'city-hub',
-            'target_system' => 'sitrep.app',
             'status' => HubRelayDelivery::STATUS_QUEUED,
         ]);
 
@@ -125,17 +117,13 @@ class DeliveryProcessingTest extends TestCase
         ]);
 
         $message = HubRelayMessage::factory()->create([
-            'target_hub_ids' => ['city-hub'],
-            'targets' => [['target_hq_hub_id' => 'city-hub', 'target_system' => 'sitrep.app']],
-            'target_system' => 'sitrep.app',
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 'city-hub', 'systems' => ['sitrep.app']]],
         ]);
 
         $delivery = HubRelayDelivery::create([
             'hub_relay_message_id' => $message->id,
             'target_hub_id' => 'city-hub',
             'target_hq_hub_id' => 'city-hub',
-            'target_system' => 'sitrep.app',
             'status' => HubRelayDelivery::STATUS_FAILED,
             'attempt_count' => 1,
         ]);
@@ -153,6 +141,8 @@ class DeliveryProcessingTest extends TestCase
 
     public function test_processing_delivery_sends_hmac_headers_when_enabled(): void
     {
+        $this->seedHubSnapshot(14, 'barangay-hub');
+
         config([
             'relay.targets' => [
                 'city-hub' => [
@@ -160,7 +150,6 @@ class DeliveryProcessingTest extends TestCase
                     'token' => 'shared-city-key',
                 ],
             ],
-            'relay.local_hub_id' => 'barangay-hub',
             'relay.hub_auth.mode' => 'hmac',
         ]);
 
@@ -173,17 +162,13 @@ class DeliveryProcessingTest extends TestCase
 
         $message = HubRelayMessage::factory()->create([
             'source_hub_id' => 'barangay-hub',
-            'target_hub_ids' => ['city-hub'],
-            'targets' => [['target_hq_hub_id' => 'city-hub', 'target_system' => 'sitrep.app']],
-            'target_system' => 'sitrep.app',
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 'city-hub', 'systems' => ['sitrep.app']]],
         ]);
 
         $delivery = HubRelayDelivery::create([
             'hub_relay_message_id' => $message->id,
             'target_hub_id' => 'city-hub',
             'target_hq_hub_id' => 'city-hub',
-            'target_system' => 'sitrep.app',
             'status' => HubRelayDelivery::STATUS_QUEUED,
         ]);
 
@@ -199,6 +184,8 @@ class DeliveryProcessingTest extends TestCase
 
     public function test_processing_delivery_uses_certificate_bound_transport_without_hub_key_in_mtls_mode(): void
     {
+        $this->seedHubSnapshot(14, 'barangay-hub');
+
         config([
             'relay.targets' => [
                 'city-hub' => [
@@ -208,7 +195,6 @@ class DeliveryProcessingTest extends TestCase
                     'ca_certificate_path' => 'C:/certs/relay-ca.pem',
                 ],
             ],
-            'relay.local_hub_id' => 'barangay-hub',
             'relay.hub_auth.mode' => 'mtls',
         ]);
 
@@ -221,17 +207,13 @@ class DeliveryProcessingTest extends TestCase
 
         $message = HubRelayMessage::factory()->create([
             'source_hub_id' => 'barangay-hub',
-            'target_hub_ids' => ['city-hub'],
-            'targets' => [['target_hq_hub_id' => 'city-hub', 'target_system' => 'sitrep.app']],
-            'target_system' => 'sitrep.app',
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 'city-hub', 'systems' => ['sitrep.app']]],
         ]);
 
         $delivery = HubRelayDelivery::create([
             'hub_relay_message_id' => $message->id,
             'target_hub_id' => 'city-hub',
             'target_hq_hub_id' => 'city-hub',
-            'target_system' => 'sitrep.app',
             'status' => HubRelayDelivery::STATUS_QUEUED,
         ]);
 
@@ -246,9 +228,9 @@ class DeliveryProcessingTest extends TestCase
 
     public function test_processing_delivery_resolves_target_from_hq_registry_cache(): void
     {
+        $this->seedHubSnapshot(14, 'barangay-hub-01');
+
         config([
-            'relay.hq_registry.local_relay_hub_id' => 'barangay-hub-01',
-            'relay.hq_registry.local_hq_id' => 14,
             'relay.hq_registry.outbound_topology_mode' => 'hq_uplinks',
             'relay.hub_credentials' => [
                 '6' => [
@@ -258,7 +240,6 @@ class DeliveryProcessingTest extends TestCase
                     'token' => 'shared-city-key',
                 ],
             ],
-            'relay.local_hub_id' => null,
         ]);
 
         HubRegistryHub::query()->create([
@@ -300,17 +281,13 @@ class DeliveryProcessingTest extends TestCase
 
         $message = HubRelayMessage::factory()->create([
             'source_hub_id' => '14',
-            'target_hub_ids' => ['city-hub-01'],
-            'targets' => [['target_hq_hub_id' => 'city-hub-01', 'target_system' => 'sitrep.app']],
-            'target_system' => 'sitrep.app',
-            'target_systems' => ['sitrep.app'],
+            'targets' => [['id' => 'city-hub-01', 'systems' => ['sitrep.app']]],
         ]);
 
         $delivery = HubRelayDelivery::create([
             'hub_relay_message_id' => $message->id,
             'target_hub_id' => 'city-hub-01',
             'target_hq_hub_id' => 'city-hub-01',
-            'target_system' => 'sitrep.app',
             'status' => HubRelayDelivery::STATUS_QUEUED,
         ]);
 

@@ -3,26 +3,19 @@
 namespace App\Relay\Registry;
 
 use App\Models\HubRegistryHub;
-use App\Models\RelayNodeSetting;
 
 class RelayNodeIdentityService
 {
     public function localHqId(): ?string
     {
-        $configured = config('relay.hq_registry.local_hq_id');
+        $hubId = $this->snapshotValue('hub_id');
 
-        if (is_string($configured) && trim($configured) !== '') {
-            return trim($configured);
+        if (is_int($hubId)) {
+            return (string) $hubId;
         }
 
-        if (is_int($configured)) {
-            return (string) $configured;
-        }
-
-        $nodeSetting = RelayNodeSetting::query()->find(1);
-
-        if (is_int($nodeSetting?->local_hq_id)) {
-            return (string) $nodeSetting->local_hq_id;
+        if (is_string($hubId) && trim($hubId) !== '') {
+            return trim($hubId);
         }
 
         return null;
@@ -30,22 +23,10 @@ class RelayNodeIdentityService
 
     public function localHubId(): ?string
     {
-        $manualHubId = config('relay.local_hub_id');
+        $relayHubId = $this->snapshotValue('relay_hub_id');
 
-        if (is_string($manualHubId) && $manualHubId !== '') {
-            return $manualHubId;
-        }
-
-        $configuredRelayHubId = config('relay.hq_registry.local_relay_hub_id');
-
-        if (is_string($configuredRelayHubId) && $configuredRelayHubId !== '') {
-            return $configuredRelayHubId;
-        }
-
-        $nodeSetting = RelayNodeSetting::query()->find(1);
-
-        if (is_string($nodeSetting?->local_relay_hub_id) && $nodeSetting->local_relay_hub_id !== '') {
-            return $nodeSetting->local_relay_hub_id;
+        if (is_string($relayHubId) && trim($relayHubId) !== '') {
+            return trim($relayHubId);
         }
 
         return null;
@@ -62,5 +43,22 @@ class RelayNodeIdentityService
         return HubRegistryHub::query()
             ->where('relay_hub_id', $hubId)
             ->first();
+    }
+
+    private function snapshotValue(string $key): mixed
+    {
+        $path = public_path('hub.json');
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        $snapshot = json_decode((string) file_get_contents($path), true);
+
+        if (! is_array($snapshot)) {
+            return null;
+        }
+
+        return $snapshot[$key] ?? null;
     }
 }

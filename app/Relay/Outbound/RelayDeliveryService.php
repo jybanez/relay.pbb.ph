@@ -88,7 +88,7 @@ class RelayDeliveryService
             'source_hub_id' => $localHqId,
             'source_system' => $message->source_system,
             'target_hq_hub_id' => $delivery->target_hq_hub_id ?: $delivery->target_hub_id,
-            'target_systems' => $message->target_systems ?? [],
+            'targets' => $message->canonicalTargets(),
             'hop_trace' => $message->hop_trace ?? [],
             'message_type' => $message->message_type,
             'payload_format' => $message->payload_format,

@@ -7,6 +7,10 @@ use App\Models\HubRegistryLink;
 
 class RelayPeerResolver
 {
+    public function __construct(
+        private RelayNodeIdentityService $nodeIdentity,
+    ) {}
+
     public function resolveOutbound(string $targetHubId): ?array
     {
         $legacyTarget = $this->legacyConfigEntry(config('relay.targets', []), $targetHubId);
@@ -82,7 +86,7 @@ class RelayPeerResolver
         }
 
         if ($mode === 'hq_sources_only') {
-            $localHubId = config('relay.hq_registry.local_relay_hub_id');
+            $localHubId = $this->nodeIdentity->localHubId();
 
             if (! is_string($localHubId) || $localHubId === '') {
                 return false;

@@ -37,7 +37,7 @@ class RelayEnvelopeValidator
             'source_hub_id' => $envelope->source_hub_id,
             'source_system' => $envelope->source_system,
             'target_hq_hub_id' => $envelope->target_hq_hub_id,
-            'target_systems' => $envelope->target_systems,
+            'targets' => $envelope->targets,
             'message_type' => $envelope->message_type,
             'payload' => $envelope->payload,
         ];
@@ -63,21 +63,45 @@ class RelayEnvelopeValidator
             throw new \InvalidArgumentException('target_hq_hub_id is required');
         }
 
-        if (! is_array($envelope->target_systems) || empty($envelope->target_systems)) {
-            throw new \InvalidArgumentException('target_systems must be a non-empty array');
+        if (! is_array($envelope->targets) || empty($envelope->targets)) {
+            throw new \InvalidArgumentException('targets must be a non-empty array');
         }
 
-        $targetSystems = [];
-        foreach ($envelope->target_systems as $targetSystem) {
-            if (! is_string($targetSystem) || $targetSystem === '') {
-                throw new \InvalidArgumentException('each target_system must be a non-empty string');
+        $targetSignatures = [];
+        foreach ($envelope->targets as $target) {
+            if (! is_array($target)) {
+                throw new \InvalidArgumentException('each target must be an object');
             }
 
-            if (in_array($targetSystem, $targetSystems, true)) {
-                throw new \InvalidArgumentException('duplicate target systems are not allowed');
+            $targetId = $target['id'] ?? null;
+            if ((! is_string($targetId) && ! is_int($targetId)) || (string) $targetId === '') {
+                throw new \InvalidArgumentException('each target id must be a non-empty string');
             }
 
-            $targetSystems[] = $targetSystem;
+            $systems = $target['systems'] ?? null;
+            if (! is_array($systems) || $systems === []) {
+                throw new \InvalidArgumentException('each target systems must be a non-empty array');
+            }
+
+            $seenSystems = [];
+            foreach ($systems as $system) {
+                if (! is_string($system) || trim($system) === '') {
+                    throw new \InvalidArgumentException('each target system must be a non-empty string');
+                }
+
+                if (in_array($system, $seenSystems, true)) {
+                    throw new \InvalidArgumentException('duplicate target systems are not allowed per target');
+                }
+
+                $seenSystems[] = $system;
+            }
+
+            $signature = (string) $targetId.'|'.implode(',', $seenSystems);
+            if (in_array($signature, $targetSignatures, true)) {
+                throw new \InvalidArgumentException('duplicate targets are not allowed');
+            }
+
+            $targetSignatures[] = $signature;
         }
 
         // message_type should be string with format

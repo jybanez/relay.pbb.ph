@@ -18,6 +18,7 @@ class ClientHandlerStage1Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seedHubSnapshot(10, 'relay-hub-10');
 
         config([
             'relay.hubs' => [
@@ -37,7 +38,7 @@ class ClientHandlerStage1Test extends TestCase
             'source_hub_id' => 'barangay-hub',
             'source_system' => 'sitrep.app',
             'targets' => [
-                ['target_hq_hub_id' => 10, 'target_system' => 'client.a'],
+                ['id' => 10, 'systems' => ['client.a']],
             ],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
@@ -62,7 +63,7 @@ class ClientHandlerStage1Test extends TestCase
             'source_hub_id' => 'barangay-hub',
             'source_system' => 'sitrep.app',
             'targets' => [
-                ['target_hq_hub_id' => 10, 'target_system' => 'client.a'],
+                ['id' => 10, 'systems' => ['client.a']],
             ],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 1],
@@ -287,7 +288,7 @@ class ClientHandlerStage1Test extends TestCase
             'source_hub_id' => 'city-hub',
             'source_system' => 'sitrep.app',
             'target_hq_hub_id' => 10,
-            'target_systems' => ['client.a'],
+            'targets' => [['id' => '10', 'systems' => ['client.a']]],
             'message_type' => 'sitrep.record',
             'payload' => ['incident_id' => 100],
         ], [
